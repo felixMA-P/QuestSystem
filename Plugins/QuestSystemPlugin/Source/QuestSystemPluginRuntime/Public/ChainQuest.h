@@ -6,15 +6,17 @@
 #include "ChainQuest.generated.h"
 
 
+class UChainQuestGraph;
+
 UCLASS(BlueprintType)
 class QUESTSYSTEMPLUGINRUNTIME_API UChainQuest : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString ExampleData;
+	UPROPERTY(EditAnywhere)
+	FText Title;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 SomeNumber = 0;
+	UPROPERTY()
+	UChainQuestGraph* ChainQuestGraph = nullptr;
 };

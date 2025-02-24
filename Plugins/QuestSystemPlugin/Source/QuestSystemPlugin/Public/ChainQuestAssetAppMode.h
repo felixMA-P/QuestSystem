@@ -4,7 +4,7 @@
 #include "WorkflowOrientedApp/ApplicationMode.h"
 #include "WorkflowOrientedApp/WorkflowTabManager.h"
 
-class FChainQuestEditorApp;
+class FChainQuestAssetEditorApp;
 
 /*
  * This class creates set up the different Tabs that we want to create, this class is managed from the EditorApp
@@ -12,7 +12,7 @@ class FChainQuestEditorApp;
 class FChainQuestAssetAppMode : public FApplicationMode
 {
 public:
-	FChainQuestAssetAppMode(TSharedPtr<FChainQuestEditorApp> InApp);
+	FChainQuestAssetAppMode(TSharedPtr<FChainQuestAssetEditorApp> InApp);
 
 	//This register the tab factories created in the constructor
 	virtual void RegisterTabFactories(TSharedPtr<FTabManager> InTabManager) override;
@@ -21,7 +21,7 @@ public:
 
 private:
 	
-	TWeakPtr<FChainQuestEditorApp> App;
+	TWeakPtr<FChainQuestAssetEditorApp> App;
 	
 	FWorkflowAllowedTabSet TabSet;
 

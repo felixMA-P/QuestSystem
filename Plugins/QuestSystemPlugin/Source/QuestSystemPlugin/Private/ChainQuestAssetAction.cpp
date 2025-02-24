@@ -1,6 +1,6 @@
 #include "ChainQuestAssetAction.h"
 #include "ChainQuest.h"
-#include "ChainQuestEditorApp.h"
+#include "ChainQuestAssetEditorApp.h"
 
 FChainQuestAssetAction::FChainQuestAssetAction(EAssetTypeCategories::Type InAssetCategory)
 {
@@ -33,7 +33,7 @@ void FChainQuestAssetAction::OpenAssetEditor(const TArray<UObject*>& InObjects,
 		UChainQuest* ChainQuest = Cast<UChainQuest>(Object);
 		if (ChainQuest)
 		{
-			TSharedRef<FChainQuestEditorApp> Editor (new FChainQuestEditorApp());
+			TSharedRef<FChainQuestAssetEditorApp> Editor (new FChainQuestAssetEditorApp());
 			Editor->InitEditor(Mode, EditWithinLevelEditor, ChainQuest);
 		}
 	}

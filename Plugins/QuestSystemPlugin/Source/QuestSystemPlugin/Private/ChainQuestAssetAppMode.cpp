@@ -1,16 +1,16 @@
 #include "ChainQuestAssetAppMode.h"
-#include "ChainQuestEditorApp.h"
+#include "ChainQuestAssetEditorApp.h"
 #include "ChainQuestAssetPrimaryTabFactory.h"
 #include "ChainQuestAssetPropertiesTabFactory.h"
 
-FChainQuestAssetAppMode::FChainQuestAssetAppMode(TSharedPtr<FChainQuestEditorApp> InApp) : FApplicationMode(TEXT("ChainQuestAppMode"))
+FChainQuestAssetAppMode::FChainQuestAssetAppMode(TSharedPtr<FChainQuestAssetEditorApp> InApp) : FApplicationMode(InApp->AppModeName)
 {
 	App = InApp;
 	
 	TabSet.RegisterFactory(MakeShareable(new FChainQuestAssetPrimaryTabFactory(InApp)));
 	TabSet.RegisterFactory(MakeShareable(new FChainQuestAssetPropertiesTabFactory(InApp)));
 	
-	TabLayout = FTabManager::NewLayout("ChainQuestAppMode_Layout_v3")->AddArea
+	TabLayout = FTabManager::NewLayout("ChainQuestAppMode_Layout_v7")->AddArea
 	(
 		FTabManager::NewPrimaryArea()->SetOrientation(Orient_Vertical)->Split(
 			FTabManager::NewSplitter()->SetOrientation(Orient_Horizontal)
@@ -32,7 +32,7 @@ FChainQuestAssetAppMode::FChainQuestAssetAppMode(TSharedPtr<FChainQuestEditorApp
 
 void FChainQuestAssetAppMode::RegisterTabFactories(TSharedPtr<FTabManager> InTabManager)
 {
-	TSharedPtr<FChainQuestEditorApp> LocalApp = App.Pin();
+	TSharedPtr<FChainQuestAssetEditorApp> LocalApp = App.Pin();
 	LocalApp->PushTabFactories(TabSet);
 	FApplicationMode::RegisterTabFactories(InTabManager);
 }

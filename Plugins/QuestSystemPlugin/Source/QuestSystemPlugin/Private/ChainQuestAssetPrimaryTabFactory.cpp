@@ -1,11 +1,11 @@
 #include "ChainQuestAssetPrimaryTabFactory.h"
-#include "ChainQuestEditorApp.h"
+#include "ChainQuestAssetEditorApp.h"
 #include "ChainQuest.h"
 #include "GraphEditor.h"
 #include "Editor/UnrealEd/Public/Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 
-FChainQuestAssetPrimaryTabFactory::FChainQuestAssetPrimaryTabFactory(TSharedPtr<FChainQuestEditorApp> InApp)
+FChainQuestAssetPrimaryTabFactory::FChainQuestAssetPrimaryTabFactory(TSharedPtr<FChainQuestAssetEditorApp> InApp)
 : FWorkflowTabFactory(InApp->PrimaryTabName, InApp)
 {
 	App = InApp;
@@ -16,16 +16,25 @@ FChainQuestAssetPrimaryTabFactory::FChainQuestAssetPrimaryTabFactory(TSharedPtr<
 
 TSharedRef<SWidget> FChainQuestAssetPrimaryTabFactory::CreateTabBody(const FWorkflowTabSpawnInfo& Info) const
 {
-	TSharedPtr<FChainQuestEditorApp> LocalApp = App.Pin();
+	TSharedPtr<FChainQuestAssetEditorApp> LocalApp = App.Pin();
 
+	SGraphEditor::FGraphEditorEvents GraphEvents;
+	GraphEvents.OnSelectionChanged.BindRaw(LocalApp.Get(), &FChainQuestAssetEditorApp::OnGraphSelectionChanged);
+
+	TSharedPtr<SGraphEditor> GraphEditor =
+		SNew(SGraphEditor)
+		.GraphEvents(GraphEvents)
+		.IsEditable(true)
+		.GraphToEdit(LocalApp->GetWorkingGraph());
+	
+	LocalApp->SetWorkingGraphUI(GraphEditor);
+	
 	return SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
 				.FillHeight(1.0f)
 				.HAlign(HAlign_Fill)
 				[
-					SNew(SGraphEditor)
-						.IsEditable(true)
-						.GraphToEdit(LocalApp->GetWorkingGraph())
+					GraphEditor.ToSharedRef()
 				];
 }
 

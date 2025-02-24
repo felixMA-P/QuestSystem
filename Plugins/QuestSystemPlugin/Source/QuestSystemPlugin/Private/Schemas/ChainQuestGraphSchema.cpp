@@ -1,7 +1,8 @@
 #include "Schemas/ChainQuestGraphSchema.h"
 
+#include "QuestInfo.h"
 #include "QuestSystemPlugin.h"
-#include "Schemas/CustomGraphNode.h"
+#include "Schemas/QuestGraphNode.h"
 
 void UChainQuestGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
@@ -30,14 +31,16 @@ const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const U
 UEdGraphNode* FNewNodeAction::PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location,
                                             bool bSelectNewNode)
 {
-	UCustomGraphNode* NewNode = NewObject<UCustomGraphNode>(ParentGraph);
+	UQuestGraphNode* NewNode = NewObject<UQuestGraphNode>(ParentGraph);
 	NewNode->CreateNewGuid();
 	NewNode->NodePosX = Location.X;
 	NewNode->NodePosY = Location.Y;
 
+	NewNode->SetQuestInfo(NewObject<UQuestInfo>(NewNode));
+
 	UEdGraphPin* InputPin = NewNode->CreateCustomPin(EGPD_Input, TEXT("Input1"));
-	NewNode->CreateCustomPin(EGPD_Output, TEXT("Output1"));
-	NewNode->CreateCustomPin(EGPD_Output, TEXT("Output2"));
+
+	NewNode->SyncPinsWithOutputs();
 
 	if (FromPin)
 	{

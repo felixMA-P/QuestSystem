@@ -1,16 +1,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ChainQuestCustomFactory.generated.h"
+#include "ChainQuestAssetCustomFactory.generated.h"
 
 UCLASS()
-class UChainQuestCustomFactory : public UFactory
+class UChainQuestAssetCustomFactory : public UFactory
 {
 
 	GENERATED_BODY()
 	
 public:
-	UChainQuestCustomFactory(const FObjectInitializer& ObjectInitializer);
+	UChainQuestAssetCustomFactory(const FObjectInitializer& ObjectInitializer);
 
 	virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 	virtual bool CanCreateNew() const override;
