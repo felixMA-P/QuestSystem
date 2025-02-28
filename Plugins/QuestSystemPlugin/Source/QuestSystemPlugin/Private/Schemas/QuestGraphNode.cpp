@@ -5,7 +5,7 @@
 #include "ToolMenu.h"
 #include "QuestInfo.h"
 
-UQuestGraphNode::UQuestGraphNode() : UEdGraphNode()
+UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 {
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
@@ -31,7 +31,7 @@ UQuestGraphNode::UQuestGraphNode() : UEdGraphNode()
 		 GetGraph()->Modify();
 	 });
 
-	DeleteOutputPinDelegate = FExecuteAction::CreateLambda(
+	 DeleteOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
 	 	UEdGraphPin * PinToRemove = GetPinAt(Pins.Num() - 1);
@@ -128,6 +128,9 @@ UEdGraphPin* UQuestGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, co
 void UQuestGraphNode::SyncPinsWithOutputs()
 {
 	int NumOfOutputPins = QuestInfo->OutPuts.Num();
+	
+	TArray<TSubclassOf<UCondition>> OutKeys;
+	QuestInfo->OutPuts.GetKeys(OutKeys);
 
 	TArray<UEdGraphPin*> OutPutPins = GetAllPins().FilterByPredicate([](UEdGraphPin * Pin)
 	 {
@@ -143,7 +146,7 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	}
 	while (NumOfOutputPins > NumGraphNodePins)
 	{
-		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName( QuestInfo->OutPuts[NumGraphNodePins].ToString()));
+		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName( QuestInfo->OutPuts[OutKeys[NumGraphNodePins]].ToString()));
 		NumGraphNodePins++;
 	}
 
@@ -153,9 +156,10 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	 });
 
 	int Index = 0;
+	
 	for (auto OutPutPin : OutPutPins)
 	{
-		OutPutPin->PinName = FName(QuestInfo->OutPuts[Index].ToString());
+		OutPutPin->PinName = FName(QuestInfo->OutPuts[OutKeys[Index]].ToString());
 		Index++;
 	}
 	

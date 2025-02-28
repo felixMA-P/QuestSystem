@@ -1,10 +1,12 @@
 ﻿#include "QuestSystemPluginRuntime.h"
 
+#include "QuestTagsManager.h"
+
 #define LOCTEXT_NAMESPACE "FQuestSystemPluginRuntimeModule"
 
 void FQuestSystemPluginRuntimeModule::StartupModule()
 {
-    
+	FQuestTagsManager::Get().InitGameplayTags();
 }
 
 void FQuestSystemPluginRuntimeModule::ShutdownModule()

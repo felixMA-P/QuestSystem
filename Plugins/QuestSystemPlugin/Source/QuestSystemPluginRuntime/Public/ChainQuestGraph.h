@@ -2,16 +2,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "QuestNodeType.h"
 #include "UObject/Object.h"
 #include "ChainQuestGraph.generated.h"
 
 class UQuestInfo;
+
+
 
 UCLASS()
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestRuntimePin : public UObject {
 	GENERATED_BODY()
 
 public:
+	
 	UPROPERTY()
 	FName PinName;
 
@@ -38,6 +42,9 @@ public:
 
 	UPROPERTY()
 	UQuestInfo* QuestInfo;
+
+	UPROPERTY()
+	EQuestNodeType QuestNodeType = EQuestNodeType::QuestNode;
 };
 
 UCLASS()

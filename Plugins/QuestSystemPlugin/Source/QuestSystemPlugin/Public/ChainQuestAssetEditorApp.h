@@ -28,11 +28,12 @@ public:
 	virtual FText GetBaseToolkitName() const override { return FText::FromString(TEXT("ChainQuestEditorApp")); }
 	virtual FString GetWorldCentricTabPrefix() const override { return TEXT("ChainQuestEditorApp"); }
 	virtual FLinearColor GetWorldCentricTabColorScale() const override { return FLinearColor(0.3f, 0.2f, 0.5f, 0.5f); }
-	virtual FString GetDocumentationLink() const override { return TEXT("GIT URL"); }
+	virtual FString GetDocumentationLink() const override { return TEXT("https://github.com/felixMA-P/QuestSystem"); }
 	virtual void OnToolkitHostingStarted(const TSharedRef<IToolkit>& Toolkit) override {}
 	virtual void OnToolkitHostingFinished(const TSharedRef<IToolkit>& Toolkit) override {}
 
 	virtual void OnClose() override;
+	
 	void OnGraphChanged(const FEdGraphEditAction& EditAction);
 	void OnNodeDetailViewPropertiesUpdated(const FPropertyChangedEvent& Event);
 	

@@ -1,11 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "QuestGraphNodeBase.h"
 #include "EdGraph/EdGraphNode.h"
 #include "QuestGraphNode.generated.h"
 
 UCLASS()
-class UQuestGraphNode : public UEdGraphNode
+class UQuestGraphNode : public UQuestGraphNodeBase
 {
 
 	GENERATED_BODY()
@@ -18,15 +19,12 @@ public:
 	virtual bool CanUserDeleteNode() const override {return true;}
 	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
 
-
 public: //Our interface
 	
-	UEdGraphPin* CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name);
-
+	virtual UEdGraphPin* CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name) override;
 	void SyncPinsWithOutputs();
-	
-	void SetQuestInfo(class UQuestInfo* Info) { QuestInfo = Info; }
-	UQuestInfo* GetQuestInfo () const { return QuestInfo; }
+
+	virtual EQuestNodeType GetQuestNodeType() const { return EQuestNodeType::QuestNode; }
 
 private:
 	
@@ -37,6 +35,5 @@ private:
 	TDelegate<void(), FDefaultDelegateUserPolicy> DeleteNodeDelegate;
 	
 	
-	UPROPERTY()
-	UQuestInfo* QuestInfo = nullptr;
+	
 };

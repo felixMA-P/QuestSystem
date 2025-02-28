@@ -17,10 +17,10 @@
  * 
  */
 
-class SCustomGraphPin : public SGraphPin
+class SQuestGraphPin : public SGraphPin
 {
 public:
-	SLATE_BEGIN_ARGS(SCustomGraphPin) {}
+	SLATE_BEGIN_ARGS(SQuestGraphPin) {}
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs, UEdGraphPin* InPin)
@@ -30,6 +30,22 @@ public:
 protected:
 
 	virtual FSlateColor GetPinColor() const override { return FLinearColor(0.2f, 1.0f, 0.2f, 1.0f); }
+	
+};
+
+class SQuestStartGraphPin : public SGraphPin
+{
+public:
+	SLATE_BEGIN_ARGS(SQuestGraphPin) {}
+	SLATE_END_ARGS()
+
+	void Construct(const FArguments& InArgs, UEdGraphPin* InPin)
+	{
+		SGraphPin::Construct(SGraphPin::FArguments(), InPin);
+	}
+protected:
+
+	virtual FSlateColor GetPinColor() const override { return FLinearColor(1.f, 0.2f, 0.2f, 1.0f); }
 	
 };
 
@@ -43,7 +59,10 @@ struct FCustomPinFactory : public FGraphPanelPinFactory
 
 	virtual TSharedPtr<SGraphPin> CreatePin(UEdGraphPin* Pin) const override {
 		if (FName(TEXT("CustomPin")) == Pin->PinType.PinSubCategory) {
-			return SNew(SCustomGraphPin, Pin);
+			return SNew(SQuestGraphPin, Pin);
+		}
+		if (FName(TEXT("StartPin")) == Pin->PinType.PinSubCategory) {
+			return SNew(SQuestStartGraphPin, Pin);
 		}
 		return nullptr;
 	}

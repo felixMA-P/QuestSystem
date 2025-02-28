@@ -6,6 +6,8 @@
 #include "ChainQuestGraph.h"
 #include "Schemas/QuestGraphNode.h"
 #include "QuestInfo.h"
+#include "Schemas/QuestStartGraphNode.h"
+#include  "QuestNodeType.h"
 
 void FChainQuestAssetEditorApp::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
 {
@@ -105,12 +107,9 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 
 	for (UEdGraphNode* UiNode : WorkingGraph->Nodes)
 	{
-		UQuestGraphNode* Node = Cast<UQuestGraphNode>(UiNode);
-		if (Node == nullptr) continue;
 		
 		UQuestRuntimeNode* RuntimeNode = NewObject<UQuestRuntimeNode>(RuntimeGraph);
 		RuntimeNode->Position = FVector2D(UiNode->NodePosX, UiNode->NodePosY);
-		RuntimeNode->QuestInfo = Node->GetQuestInfo();
 		
 		for (UEdGraphPin* UiPin : UiNode->Pins)
 		{
@@ -130,6 +129,18 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 				RuntimeNode->OutputPins.Add(RuntimePin);
 			}
 		}
+
+		if (UiNode->IsA(UQuestGraphNode::StaticClass()))
+		{
+			UQuestGraphNode* UIQuestGraphNode = Cast<UQuestGraphNode>(UiNode);
+			RuntimeNode->QuestNodeType = EQuestNodeType::QuestNode;
+			RuntimeNode->QuestInfo = UIQuestGraphNode->GetQuestInfo();
+		}
+		else if (UiNode->IsA(UQuestStartGraphNode::StaticClass()))
+		{
+			RuntimeNode->QuestNodeType = EQuestNodeType::StartNode;
+		}
+		
 		RuntimeGraph->Nodes.Add(RuntimeNode);
 	}
 
@@ -144,7 +155,11 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 
 void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 {
-	if (WorkingAsset->ChainQuestGraph == nullptr) return;
+	if (WorkingAsset->ChainQuestGraph == nullptr)
+	{
+		WorkingGraph->GetSchema()->CreateDefaultNodesForGraph(*WorkingGraph);
+		return;
+	}
 
 	TArray<std::pair<FGuid, FGuid>> Connections;
 	TMap<FGuid, UEdGraphPin*> IdToPinMap;
@@ -152,7 +167,14 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 	for (UQuestRuntimeNode* RuntimeNode : WorkingAsset->ChainQuestGraph->Nodes)
 	{
 
-		UQuestGraphNode* NewNode = NewObject<UQuestGraphNode>(WorkingGraph);
+		UQuestGraphNodeBase* NewNode = nullptr;
+		if (RuntimeNode->QuestNodeType == EQuestNodeType::QuestNode)
+			NewNode = NewObject<UQuestGraphNode>(WorkingGraph);
+		else if (RuntimeNode->QuestNodeType == EQuestNodeType::QuestNode)
+			NewNode = NewObject<UQuestStartGraphNode>(WorkingGraph);
+
+		check(NewNode);
+		
 		NewNode->CreateNewGuid();
 		NewNode->NodePosX = RuntimeNode->Position.X;
 		NewNode->NodePosY = RuntimeNode->Position.Y;
@@ -161,7 +183,7 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		{
 			NewNode->SetQuestInfo(DuplicateObject(RuntimeNode->QuestInfo, RuntimeNode));
 		}
-		else
+		else if (RuntimeNode->QuestNodeType != EQuestNodeType::StartNode)
 		{
 			NewNode->SetQuestInfo(NewObject<UQuestInfo>(RuntimeNode));
 		}

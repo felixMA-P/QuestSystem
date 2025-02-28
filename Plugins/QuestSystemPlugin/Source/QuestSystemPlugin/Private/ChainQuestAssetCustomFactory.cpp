@@ -9,7 +9,7 @@ UChainQuestAssetCustomFactory::UChainQuestAssetCustomFactory(const FObjectInitia
 UObject* UChainQuestAssetCustomFactory::FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags,
 	UObject* Context, FFeedbackContext* Warn)
 {
-	return NewObject<UChainQuest>(InParent, InName, Flags);;
+	return NewObject<UChainQuest>(InParent, InName, Flags);
 }
 
 bool UChainQuestAssetCustomFactory::CanCreateNew() const

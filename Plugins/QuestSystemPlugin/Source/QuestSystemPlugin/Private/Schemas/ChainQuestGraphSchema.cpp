@@ -3,6 +3,7 @@
 #include "QuestInfo.h"
 #include "QuestSystemPlugin.h"
 #include "Schemas/QuestGraphNode.h"
+#include "Schemas/QuestStartGraphNode.h"
 
 void UChainQuestGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
@@ -25,6 +26,20 @@ const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const U
 	if (A->Direction == B->Direction) return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Inputs can only connect to outputs"));
 	
 	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_AB, TEXT(""));
+	
+}
+
+void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
+{
+	UQuestStartGraphNode* startNode = NewObject<UQuestStartGraphNode>(&Graph);
+	startNode->CreateNewGuid();
+	startNode->NodePosX = 0;
+	startNode->NodePosY = 0;
+
+	startNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
+    
+	Graph.AddNode(startNode, true, true);
+	Graph.Modify();
 	
 }
 
