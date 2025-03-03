@@ -49,6 +49,22 @@ protected:
 	
 };
 
+class SQuestEndGraphPin : public SGraphPin
+{
+public:
+	SLATE_BEGIN_ARGS(SQuestGraphPin) {}
+	SLATE_END_ARGS()
+
+	void Construct(const FArguments& InArgs, UEdGraphPin* InPin)
+	{
+		SGraphPin::Construct(SGraphPin::FArguments(), InPin);
+	}
+protected:
+
+	virtual FSlateColor GetPinColor() const override { return FLinearColor(0.2f, 0.2f, 1.0f, 1.0f); }
+	
+};
+
 
 /*
  * Custom pin factory
@@ -63,6 +79,9 @@ struct FCustomPinFactory : public FGraphPanelPinFactory
 		}
 		if (FName(TEXT("StartPin")) == Pin->PinType.PinSubCategory) {
 			return SNew(SQuestStartGraphPin, Pin);
+		}
+		if (FName(TEXT("EndPin")) == Pin->PinType.PinSubCategory) {
+			return SNew(SQuestEndGraphPin, Pin);
 		}
 		return nullptr;
 	}

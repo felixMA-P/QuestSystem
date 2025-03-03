@@ -10,10 +10,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
-		CreateCustomPin(
-			 EGPD_Output, 
-			 TEXT("Another Output")
-			 );
+	 	/*TODO*/
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
 	 	GetGraph()->Modify();
@@ -165,11 +162,24 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	
 }
 
+UEdGraphPin* UQuestGraphNode::CreateDefaultInputPin()
+{
+	return CreateCustomPin(EGPD_Input, FName(TEXT("Display")));
+}
+
+void UQuestGraphNode::CreateDefaultOutPutPins()
+{
+	Super::CreateDefaultOutPutPins();
+}
+
+
 FText UQuestGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
+	check(QuestInfo);
+	
 	if (QuestInfo->Title.IsEmpty())
 		return FText::FromString("Set up the title");
-		
+	
 	return QuestInfo->Title;
 }
 

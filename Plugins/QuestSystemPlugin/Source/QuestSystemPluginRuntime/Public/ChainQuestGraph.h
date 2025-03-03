@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "QuestInfoBase.h"
 #include "QuestNodeType.h"
 #include "UObject/Object.h"
 #include "ChainQuestGraph.generated.h"
@@ -41,7 +42,7 @@ public:
 	FVector2D Position;
 
 	UPROPERTY()
-	UQuestInfo* QuestInfo;
+	UQuestInfoBase* QuestInfo;
 
 	UPROPERTY()
 	EQuestNodeType QuestNodeType = EQuestNodeType::QuestNode;

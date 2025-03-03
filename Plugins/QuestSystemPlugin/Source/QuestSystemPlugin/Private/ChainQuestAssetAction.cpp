@@ -2,7 +2,7 @@
 #include "ChainQuest.h"
 #include "ChainQuestAssetEditorApp.h"
 
-FChainQuestAssetAction::FChainQuestAssetAction(EAssetTypeCategories::Type InAssetCategory)
+FChainQuestAssetAction::FChainQuestAssetAction(const EAssetTypeCategories::Type InAssetCategory)
 {
 	AssetCategory = InAssetCategory;
 }

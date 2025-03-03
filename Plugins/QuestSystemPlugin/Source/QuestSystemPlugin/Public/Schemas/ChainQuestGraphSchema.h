@@ -12,10 +12,13 @@ struct FNewNodeAction : public FEdGraphSchemaAction
 
 	FNewNodeAction() {}
 
-	FNewNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGruping) :
-	FEdGraphSchemaAction(InNodeCategory, InMenuDesc, InToolTip, InGruping) {}
+	FNewNodeAction(UClass* InClassTemplate, FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGruping) :
+	FEdGraphSchemaAction(InNodeCategory, InMenuDesc, InToolTip, InGruping), ClassTemplate(InClassTemplate) {}
 
 	virtual UEdGraphNode* PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode) override;
+
+protected:
+	const UClass* ClassTemplate = nullptr;
 };
 
 UCLASS()

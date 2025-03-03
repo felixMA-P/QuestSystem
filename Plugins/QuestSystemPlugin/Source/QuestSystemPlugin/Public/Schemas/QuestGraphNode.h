@@ -2,8 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "QuestGraphNodeBase.h"
+#include "QuestInfo.h"
 #include "EdGraph/EdGraphNode.h"
 #include "QuestGraphNode.generated.h"
+
 
 UCLASS()
 class UQuestGraphNode : public UQuestGraphNodeBase
@@ -24,7 +26,17 @@ public: //Our interface
 	virtual UEdGraphPin* CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name) override;
 	void SyncPinsWithOutputs();
 
-	virtual EQuestNodeType GetQuestNodeType() const { return EQuestNodeType::QuestNode; }
+	virtual EQuestNodeType GetQuestNodeType() const override { return EQuestNodeType::QuestNode; }
+	
+	virtual UEdGraphPin* CreateDefaultInputPin() override;
+	virtual void CreateDefaultOutPutPins() override;
+
+	virtual void InitNodeInfo(UObject* Output) override { QuestInfo = NewObject<UQuestInfo>(Output); }
+	virtual void SetQuestInfo(UQuestInfoBase* Info) override { QuestInfo = Cast<UQuestInfo>(Info); }
+	virtual UQuestInfoBase* GetQuestInfoBase () const override { return QuestInfo; }
+	virtual UQuestInfo* GetQuestInfo () const { return QuestInfo; }
+
+	virtual void OnPropertiesChanged() override { SyncPinsWithOutputs(); }
 
 private:
 	
@@ -34,6 +46,7 @@ private:
 	TDelegate<void(), FDefaultDelegateUserPolicy> DeleteInputPinDelegate;
 	TDelegate<void(), FDefaultDelegateUserPolicy> DeleteNodeDelegate;
 	
-	
+	UPROPERTY()
+	UQuestInfo* QuestInfo = nullptr;
 	
 };

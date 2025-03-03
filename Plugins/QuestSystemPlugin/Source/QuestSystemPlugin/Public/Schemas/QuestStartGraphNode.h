@@ -20,6 +20,7 @@ public: // UDialogStartGraphNode interface
 public: // UDialogGraphNodeBase interface
 	virtual UEdGraphPin* CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name) override;
 
-	virtual EQuestNodeType GetQuestNodeType() const override { return EQuestNodeType::Unknown; }
+	virtual EQuestNodeType GetQuestNodeType() const override { return EQuestNodeType::StartNode; }
+	
 	
 };

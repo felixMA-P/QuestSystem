@@ -49,7 +49,7 @@ public:
 protected:
 	virtual void UpdateWorkingAssetFromGraph();
 	virtual void UpdateEditorGraphFromWorkingAsset();
-	class UQuestGraphNode* GetSelectedNode(const FGraphPanelSelectionSet& Selection);
+	class UQuestGraphNodeBase* GetSelectedNode(const FGraphPanelSelectionSet& Selection);
 	
 private:
 	UPROPERTY()

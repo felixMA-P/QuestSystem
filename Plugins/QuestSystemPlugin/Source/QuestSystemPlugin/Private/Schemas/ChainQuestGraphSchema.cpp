@@ -2,6 +2,7 @@
 
 #include "QuestInfo.h"
 #include "QuestSystemPlugin.h"
+#include "Schemas/QuestEndGraphNode.h"
 #include "Schemas/QuestGraphNode.h"
 #include "Schemas/QuestStartGraphNode.h"
 
@@ -9,13 +10,24 @@ void UChainQuestGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Co
 {
 	TSharedPtr<FNewNodeAction> NewNodeAction(
 		new FNewNodeAction(
+			UQuestGraphNode::StaticClass(),
 			FText::FromString("Nodes"),
-			FText::FromString("NewNodeAction"),
+			FText::FromString("New Quest Node"),
 			FText::FromString("Makes a new node"),
+			0
+		));
+
+	TSharedPtr<FNewNodeAction> NewEndNodeAction(
+		new FNewNodeAction(
+			UQuestEndGraphNode::StaticClass(),
+			FText::FromString("Nodes"),
+			FText::FromString("New End Node"),
+			FText::FromString("Makes a new end node"),
 			0
 		));
 	
 	ContextMenuBuilder.AddAction(NewNodeAction);
+	ContextMenuBuilder.AddAction(NewEndNodeAction);
 }
 
 const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const UEdGraphPin* A,
@@ -46,17 +58,15 @@ void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 UEdGraphNode* FNewNodeAction::PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location,
                                             bool bSelectNewNode)
 {
-	UQuestGraphNode* NewNode = NewObject<UQuestGraphNode>(ParentGraph);
+	UQuestGraphNodeBase* NewNode = NewObject<UQuestGraphNodeBase>(ParentGraph, ClassTemplate);
 	NewNode->CreateNewGuid();
 	NewNode->NodePosX = Location.X;
 	NewNode->NodePosY = Location.Y;
+	
+	NewNode->InitNodeInfo(NewNode);
 
-	NewNode->SetQuestInfo(NewObject<UQuestInfo>(NewNode));
-
-	UEdGraphPin* InputPin = NewNode->CreateCustomPin(EGPD_Input, TEXT("Input1"));
-
-	NewNode->SyncPinsWithOutputs();
-
+	UEdGraphPin* InputPin = NewNode->CreateDefaultInputPin();
+	
 	if (FromPin)
 	{
 		NewNode->GetSchema()->TryCreateConnection(FromPin,InputPin);
