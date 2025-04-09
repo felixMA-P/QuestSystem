@@ -23,14 +23,14 @@ public:
 	{
 		QuestStatusEnabled = UGameplayTagsManager::Get().AddNativeGameplayTag(TEXT("Gameplay.QuestSystem.Quest.Status.Enabled"));
 		QuestStatusDisabled = UGameplayTagsManager::Get().AddNativeGameplayTag(TEXT("Gameplay.QuestSystem.Quest.Status.Disabled"));
-		QuestStatusAccepted = UGameplayTagsManager::Get().AddNativeGameplayTag(TEXT("Gameplay.QuestSystem.Quest.Status.Accepted"));
+		QuestStatusOnGoing = UGameplayTagsManager::Get().AddNativeGameplayTag(TEXT("Gameplay.QuestSystem.Quest.Status.OnGoing"));
 		QuestStatusCompleted = UGameplayTagsManager::Get().AddNativeGameplayTag(TEXT("Gameplay.QuestSystem.Quest.Status.Completed"));
 	}
 	
 	
 	FGameplayTag QuestStatusEnabled;
 	FGameplayTag QuestStatusDisabled;
-	FGameplayTag QuestStatusAccepted;
+	FGameplayTag QuestStatusOnGoing;
 	FGameplayTag QuestStatusCompleted;
 	
 };

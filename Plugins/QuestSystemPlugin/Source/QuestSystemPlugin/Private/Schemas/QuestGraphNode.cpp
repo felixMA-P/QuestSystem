@@ -10,7 +10,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
-	 	/*TODO*/
+	 	QuestInfo->OutPuts.Add(UCondition::StaticClass(), FText::FromString("Output"));
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
 	 	GetGraph()->Modify();
@@ -19,9 +19,20 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	AddNewInputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
+
+	 	TArray<UEdGraphPin*> const InputPins = Pins.FilterByPredicate([](UEdGraphPin* Pin)
+		 {
+			 return Pin->Direction == EGPD_Input;
+		 });
+
+	 	const int CurrentNumberOfInputs = InputPins.Num();
+	 	FString CurrentInputName = TEXT("Input");
+	 	FString NumberS = FString::FromInt(CurrentNumberOfInputs);
+	 	CurrentInputName = CurrentInputName.Append(NumberS);
+	 	
 		CreateCustomPin(
 			 EGPD_Input, 
-			 TEXT("Another Input")
+			 FName(CurrentInputName)
 			 );
 		
 		 GetGraph()->NotifyGraphChanged();
@@ -164,7 +175,7 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 
 UEdGraphPin* UQuestGraphNode::CreateDefaultInputPin()
 {
-	return CreateCustomPin(EGPD_Input, FName(TEXT("Display")));
+	return CreateCustomPin(EGPD_Input, FName(TEXT("Input")));
 }
 
 void UQuestGraphNode::CreateDefaultOutPutPins()

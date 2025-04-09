@@ -7,9 +7,8 @@
 #include "UObject/Object.h"
 #include "ChainQuestGraph.generated.h"
 
+class UQuestRuntimeNode;
 class UQuestInfo;
-
-
 
 UCLASS()
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestRuntimePin : public UObject {
@@ -25,9 +24,12 @@ public:
 
 	UPROPERTY()
 	UQuestRuntimePin* Connection = nullptr;
+
+	UPROPERTY()
+	UQuestRuntimeNode* Parent = nullptr;
 };
 
-UCLASS()
+UCLASS(BlueprintType)
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestRuntimeNode : public UObject {
 	GENERATED_BODY()
 
@@ -41,19 +43,19 @@ public:
 	UPROPERTY()
 	FVector2D Position;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	UQuestInfoBase* QuestInfo;
 
 	UPROPERTY()
 	EQuestNodeType QuestNodeType = EQuestNodeType::QuestNode;
 };
 
-UCLASS()
+UCLASS(BlueprintType)
 class QUESTSYSTEMPLUGINRUNTIME_API UChainQuestGraph : public UObject
 {
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY();
+	UPROPERTY(BlueprintReadWrite)
 	TArray<UQuestRuntimeNode*> Nodes;
 };

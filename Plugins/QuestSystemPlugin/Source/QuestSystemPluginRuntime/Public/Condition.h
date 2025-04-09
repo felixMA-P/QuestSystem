@@ -6,7 +6,8 @@
 #include "Condition.generated.h"
 
 
-class UQuestComponent;
+class UQuestWorldSubsystem;
+
 
 UCLASS(BlueprintType, Blueprintable)
 class QUESTSYSTEMPLUGINRUNTIME_API UCondition : public UObject
@@ -14,9 +15,9 @@ class QUESTSYSTEMPLUGINRUNTIME_API UCondition : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual void CheckCondition(UQuestComponent* QuestComponent);
+	virtual bool CheckCondition(UQuestWorldSubsystem* QuestComponent);
 	
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
-	void CheckConditionEvent(UQuestComponent* QuestComponent);
+	bool CheckConditionEvent(UQuestWorldSubsystem* QuestComponent);
 };

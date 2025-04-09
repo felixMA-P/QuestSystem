@@ -33,9 +33,12 @@ public:
 	virtual void OnToolkitHostingFinished(const TSharedRef<IToolkit>& Toolkit) override {}
 
 	virtual void OnClose() override;
+
+	virtual void SaveAsset_Execute() override;
 	
 	void OnGraphChanged(const FEdGraphEditAction& EditAction);
 	void OnNodeDetailViewPropertiesUpdated(const FPropertyChangedEvent& Event);
+	
 	
 	void SetWorkingGraphUI(TSharedPtr<SGraphEditor> InWorkingGraphUI) { WorkingGraphUI = InWorkingGraphUI;}
 	void SetSelectedNodeDetailView(TSharedPtr<class IDetailsView> InDetailsView);

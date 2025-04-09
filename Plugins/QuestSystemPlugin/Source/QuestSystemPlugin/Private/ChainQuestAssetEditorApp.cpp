@@ -58,6 +58,13 @@ void FChainQuestAssetEditorApp::OnClose()
 	FWorkflowCentricApplication::OnClose();
 }
 
+void FChainQuestAssetEditorApp::SaveAsset_Execute()
+{
+	UpdateWorkingAssetFromGraph();
+	FWorkflowCentricApplication::SaveAsset_Execute();
+}
+
+
 void FChainQuestAssetEditorApp::OnGraphChanged(const FEdGraphEditAction& EditAction)
 {
 	UpdateWorkingAssetFromGraph();
@@ -102,13 +109,12 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 
 	UChainQuestGraph* RuntimeGraph = NewObject<UChainQuestGraph>(WorkingAsset);
 	WorkingAsset->ChainQuestGraph = RuntimeGraph;
-
+	
 	TArray<std::pair<FGuid, FGuid>> Connections;
 	TMap<FGuid, UQuestRuntimePin*> IdToPinMap;
 
 	for (UEdGraphNode* UiNode : WorkingGraph->Nodes)
 	{
-		
 		UQuestRuntimeNode* RuntimeNode = NewObject<UQuestRuntimeNode>(RuntimeGraph);
 		RuntimeNode->Position = FVector2D(UiNode->NodePosX, UiNode->NodePosY);
 		
@@ -117,6 +123,8 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 			UQuestRuntimePin* RuntimePin = NewObject<UQuestRuntimePin>(RuntimeNode);
 			RuntimePin->PinName = UiPin->PinName;
 			RuntimePin->PinId = UiPin->PinId;
+			RuntimePin->Parent = RuntimeNode;
+			
 			if (UiPin->HasAnyConnections() && UiPin->Direction == EEdGraphPinDirection::EGPD_Output) {
 				std::pair<FGuid, FGuid> Connection = std::make_pair(UiPin->PinId, UiPin->LinkedTo[0]->PinId);
 				Connections.Add(Connection);
@@ -130,8 +138,7 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 				RuntimeNode->OutputPins.Add(RuntimePin);
 			}
 		}
-
-
+		
 		UQuestGraphNodeBase* UIQuestGraphNode = Cast<UQuestGraphNodeBase>(UiNode);
 		RuntimeNode->QuestNodeType = UIQuestGraphNode->GetQuestNodeType();
 		RuntimeNode->QuestInfo = DuplicateObject(UIQuestGraphNode->GetQuestInfoBase(), RuntimeNode);
@@ -223,7 +230,7 @@ UQuestGraphNodeBase* FChainQuestAssetEditorApp::GetSelectedNode(const FGraphPane
 {
 	for (UObject* Object : Selection)
 	{
-		UQuestGraphNode* Node = Cast<UQuestGraphNode>(Object);
+		UQuestGraphNodeBase* Node = Cast<UQuestGraphNodeBase>(Object);
 		if (Node != nullptr)
 		{
 			return Node;

@@ -8,24 +8,21 @@
 #include "UObject/Object.h"
 #include "QuestInfo.generated.h"
 
-UCLASS()
+UCLASS(BlueprintType, BlueprintType)
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestInfo : public UQuestInfoBase
 {
 	GENERATED_BODY()
 
 public:
 
-	UPROPERTY(EditAnywhere) FText Title = FText::FromString("Quest");
-	UPROPERTY(EditAnywhere) FText Description = FText::FromString("Description");
+	UQuestInfo();
 
-	UPROPERTY(EditAnywhere)
-	FGameplayTag StatusTag;
+	UPROPERTY(EditAnywhere) FText Title = FText::FromString("Quest");
+	
+	UPROPERTY(EditAnywhere) FText Description = FText::FromString("Description");
 
 	UPROPERTY(EditAnywhere, NoClear)
 	TMap<TSubclassOf<UCondition>, FText> OutPuts;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UCondition> Prueba;
 	
 private:
 	

@@ -2,3 +2,4 @@
 
 
 #include "EndQuestInfo.h"
+#include "ChainQuest.h"

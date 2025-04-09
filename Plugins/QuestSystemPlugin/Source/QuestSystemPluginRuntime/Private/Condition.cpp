@@ -2,9 +2,9 @@
 
 
 #include "Condition.h"
-#include "QuestComponent.h"
+#include "QuestWorldSubsystem.h"
 
-void UCondition::CheckCondition(UQuestComponent* QuestComponent)
+bool UCondition::CheckCondition(UQuestWorldSubsystem* QuestComponent)
 {
-	CheckConditionEvent(QuestComponent);
+	return CheckConditionEvent(QuestComponent);
 }

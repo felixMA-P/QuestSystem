@@ -38,4 +38,5 @@ private:
 	UEndQuestInfo* QuestInfo = nullptr;
 	
 	TDelegate<void(), FDefaultDelegateUserPolicy> DeleteNodeDelegate;
+	TDelegate<void(), FDefaultDelegateUserPolicy> AddNewInputPinDelegate;
 };

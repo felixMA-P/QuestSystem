@@ -38,19 +38,18 @@ const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const U
 	if (A->Direction == B->Direction) return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Inputs can only connect to outputs"));
 	
 	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_AB, TEXT(""));
-	
 }
 
 void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 {
-	UQuestStartGraphNode* startNode = NewObject<UQuestStartGraphNode>(&Graph);
-	startNode->CreateNewGuid();
-	startNode->NodePosX = 0;
-	startNode->NodePosY = 0;
+	UQuestStartGraphNode* StartNode = NewObject<UQuestStartGraphNode>(&Graph);
+	StartNode->CreateNewGuid();
+	StartNode->NodePosX = 0;
+	StartNode->NodePosY = 0;
 
-	startNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
+	StartNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
     
-	Graph.AddNode(startNode, true, true);
+	Graph.AddNode(StartNode, true, true);
 	Graph.Modify();
 	
 }

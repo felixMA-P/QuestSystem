@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "ChainQuestAssetCustomFactory.generated.h"
 
+
 UCLASS()
 class UChainQuestAssetCustomFactory : public UFactory
 {
@@ -14,5 +15,5 @@ public:
 
 	virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
 	virtual bool CanCreateNew() const override;
-	
+
 };
