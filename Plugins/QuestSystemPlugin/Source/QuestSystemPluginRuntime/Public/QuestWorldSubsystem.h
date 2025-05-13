@@ -7,6 +7,12 @@
 #include "ChainQuestHandler.h"
 #include "QuestWorldSubsystem.generated.h"
 
+UENUM(BlueprintType)
+enum ETypeOfCalendar
+{
+	ByRest,
+	ByTime
+};
 
 class UDataAssetChainQuests;
 class UChainQuest;
@@ -30,10 +36,27 @@ protected:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 private:
+
+	UPROPERTY()
+	TEnumAsByte<ETypeOfCalendar> TypeOfCalendar;
+
+	UPROPERTY()
+	int CurrentDay = 0;
+
+	UPROPERTY()
+	TMap<const UChainQuest*, int> CalendarChainQuests;
+
+	TArray<FChainQuestHandler*> ChainQuests;
 	
-	TArray<FChainQuestHandler> ChainQuests;
+	TArray<FChainQuestHandler*> EndChainQuests;
 
 public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Quest System")
+	FGameplayTagContainer QuestGameplayTagsContainer;
+	
+	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	void AddGameplayTags(const TArray<FGameplayTag>& GameplayTags);
 
 	UFUNCTION(BlueprintCallable, Category = "Quest System")
 	void InitializeChainQuests(const UDataAssetChainQuests* DataAssetInitializer);
@@ -46,5 +69,17 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Quest System")
 	bool FindChainQuest(const UChainQuest* InChainQuest);
+	
+	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	void AddChainQuestToCalendar(const UChainQuest* ChainQuest, const int Day);
+
+	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	void CheckCalendar();
+
+	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	void CheckCalendarOnGoingQuests();
+
+	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	void EndOfDay();
 	
 };

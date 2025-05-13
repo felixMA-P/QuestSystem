@@ -21,8 +21,10 @@ public:
 	
 	UPROPERTY(EditAnywhere) FText Description = FText::FromString("Description");
 
+	UPROPERTY(EditAnywhere) int DayToComplete = 0;
+
 	UPROPERTY(EditAnywhere, NoClear)
-	TMap<TSubclassOf<UCondition>, FText> OutPuts;
+	TMap<TSubclassOf<ACondition>, FText> OutPuts;
 	
 private:
 	

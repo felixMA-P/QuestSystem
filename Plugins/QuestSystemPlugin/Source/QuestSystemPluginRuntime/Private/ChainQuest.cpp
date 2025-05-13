@@ -5,9 +5,9 @@
 #include "ChainQuestHandler.h"
 #include "QuestTagsManager.h"
 
-FChainQuestHandler UChainQuest::GetHandler() const
+FChainQuestHandler* UChainQuest::GetHandler() const
 {
-	return FChainQuestHandler(this);
+	return new FChainQuestHandler(this);
 }
 
 UChainQuest::UChainQuest()

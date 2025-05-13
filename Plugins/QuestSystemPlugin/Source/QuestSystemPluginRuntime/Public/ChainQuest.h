@@ -8,7 +8,7 @@
 
 
 class FChainQuestHandler;
-class UCondition;
+class ACondition;
 class UChainQuestGraph;
 
 UCLASS(BlueprintType)
@@ -18,15 +18,18 @@ class QUESTSYSTEMPLUGINRUNTIME_API UChainQuest : public UObject
 
 public:
 
-	FChainQuestHandler GetHandler() const;
+	FChainQuestHandler* GetHandler() const;
 
 	UChainQuest();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText Title;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bHasCalendarDates = false;
+
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UCondition> StartCondition;
+	TSubclassOf<ACondition> StartCondition;
 	
 	UPROPERTY(BlueprintReadWrite)
 	UChainQuestGraph* ChainQuestGraph = nullptr;

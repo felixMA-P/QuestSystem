@@ -4,7 +4,7 @@
 #include "Condition.h"
 #include "QuestWorldSubsystem.h"
 
-bool UCondition::CheckCondition(UQuestWorldSubsystem* QuestComponent)
+bool ACondition::CheckCondition()
 {
-	return CheckConditionEvent(QuestComponent);
+	return CheckConditionEvent();
 }

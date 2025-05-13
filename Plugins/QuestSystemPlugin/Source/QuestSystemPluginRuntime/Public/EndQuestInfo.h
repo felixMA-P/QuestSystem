@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "ChainQuestGraph.h"
+#include "Condition.h"
 #include "QuestInfoBase.h"
 #include "EndQuestInfo.generated.h"
 
@@ -16,6 +17,9 @@ class QUESTSYSTEMPLUGINRUNTIME_API UEndQuestInfo : public UQuestInfoBase
 public:
 	UPROPERTY(EditAnywhere)
 	FString Title = TEXT("");
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ACondition> EndOutput;
 
 	UPROPERTY(EditAnywhere)
 	UChainQuest* NextChainQuest = nullptr;

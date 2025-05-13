@@ -10,7 +10,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
-	 	QuestInfo->OutPuts.Add(UCondition::StaticClass(), FText::FromString("Output"));
+	 	QuestInfo->OutPuts.Add(ACondition::StaticClass(), FText::FromString("Output"));
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
 	 	GetGraph()->Modify();
@@ -137,7 +137,7 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 {
 	int NumOfOutputPins = QuestInfo->OutPuts.Num();
 	
-	TArray<TSubclassOf<UCondition>> OutKeys;
+	TArray<TSubclassOf<ACondition>> OutKeys;
 	QuestInfo->OutPuts.GetKeys(OutKeys);
 
 	TArray<UEdGraphPin*> OutPutPins = GetAllPins().FilterByPredicate([](UEdGraphPin * Pin)
