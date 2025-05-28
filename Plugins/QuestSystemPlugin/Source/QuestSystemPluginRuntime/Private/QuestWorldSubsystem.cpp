@@ -34,6 +34,8 @@ void UQuestWorldSubsystem::AddGameplayTags(const TArray<FGameplayTag>& GameplayT
 	{
 		QuestGameplayTagsContainer.AddTag(GameplayTag);
 	}
+
+	CheckOnGoingQuestConditions();
 }
 
 void UQuestWorldSubsystem::InitializeChainQuests(const UDataAssetChainQuests* DataAssetInitializer)
@@ -56,7 +58,7 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 
 	for (FChainQuestHandler* OnGoingChainQuest : ChainQuests)
 	{
-		if (OnGoingChainQuest->CheckCurrentNodeConditions())
+		if (OnGoingChainQuest->CheckCurrentNodeConditions(this))
 		{
 			const UEndQuestInfo* EndQuestInfo = Cast<UEndQuestInfo>(OnGoingChainQuest->CurrentNode->QuestInfo);
 			
@@ -67,7 +69,7 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 			
 			if (EndQuestInfo->EndOutput != nullptr)
 			{
-				EndQuestInfo->EndOutput->GetDefaultObject<ACondition>()->CheckCondition();
+				EndQuestInfo->EndOutput->GetDefaultObject<ACondition>()->CheckCondition(this);
 			}
 			
 			AuxEndedChainQuests.Add(OnGoingChainQuest);
@@ -97,7 +99,7 @@ void UQuestWorldSubsystem::AddChainQuest(const UChainQuest* ToAddChainQuest)
 		return;
 	}
 	
-	if (ToAddChainQuest->StartCondition->GetDefaultObject<ACondition>()->CheckCondition())
+	if (ToAddChainQuest->StartCondition->GetDefaultObject<ACondition>()->CheckCondition(this))
 	{
 		ChainQuests.Add(ToAddChainQuest->GetHandler());
 		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
@@ -163,4 +165,48 @@ void UQuestWorldSubsystem::EndOfDay()
 	CheckOnGoingQuestConditions();
 	CheckCalendarOnGoingQuests();
 }
+
+void UQuestWorldSubsystem::GetAllChainQuestsInfo(FChainsQuestsInfo& OutInfo)
+{
+	for (const FChainQuestHandler* Element : ChainQuests)
+	{
+		OutInfo.ChainQuests.Add(Element->ChainQuest);
+	}
+	
+	for (const FChainQuestHandler* Element : EndChainQuests)
+	{
+		OutInfo.EndChainQuests.Add(Element->ChainQuest);
+	}
+}
+
+void UQuestWorldSubsystem::GetChainQuestQuestsInfo(const UChainQuest* ChainQuest, FQuestsInfo& OutInfo)
+{
+	if (!ChainQuest) return;
+	
+	FChainQuestHandler** HandlerPtr = ChainQuests.FindByPredicate([ChainQuest](FChainQuestHandler* ChainQuestHandler)
+ 	{
+ 		 return ChainQuestHandler->ChainQuest == ChainQuest;
+	});
+	
+ 	if (HandlerPtr)
+	{
+ 		OutInfo.QuestsInfo = (*HandlerPtr)->QuestsInfos;
+ 	}
+}
+
+void UQuestWorldSubsystem::GetEndedChainQuestQuestsInfo(const UChainQuest* ChainQuest, FQuestsInfo& OutInfo)
+{
+	if (!ChainQuest) return;
+	
+	FChainQuestHandler** HandlerPtr = EndChainQuests.FindByPredicate([ChainQuest](FChainQuestHandler* ChainQuestHandler)
+	 {
+		  return ChainQuestHandler->ChainQuest == ChainQuest;
+	});
+	
+	if (HandlerPtr)
+	{
+		OutInfo.QuestsInfo = (*HandlerPtr)->QuestsInfos;
+	}
+}
+
 

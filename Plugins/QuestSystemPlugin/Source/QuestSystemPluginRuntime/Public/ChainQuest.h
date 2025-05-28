@@ -11,7 +11,7 @@ class FChainQuestHandler;
 class ACondition;
 class UChainQuestGraph;
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class QUESTSYSTEMPLUGINRUNTIME_API UChainQuest : public UObject
 {
 	GENERATED_BODY()
@@ -22,10 +22,10 @@ public:
 
 	UChainQuest();
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText Title;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bHasCalendarDates = false;
 
 	UPROPERTY(EditAnywhere)

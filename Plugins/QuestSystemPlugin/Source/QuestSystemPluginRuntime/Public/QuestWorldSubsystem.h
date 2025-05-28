@@ -5,13 +5,39 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "ChainQuestHandler.h"
+#include "ChainQuest.h"
 #include "QuestWorldSubsystem.generated.h"
+
+class UQuestInfo;
 
 UENUM(BlueprintType)
 enum ETypeOfCalendar
 {
 	ByRest,
 	ByTime
+};
+
+USTRUCT(BlueprintType)
+struct FChainsQuestsInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly)
+	TArray <const UChainQuest*> ChainQuests;
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray <const UChainQuest*> EndChainQuests;
+	
+};
+
+USTRUCT(BlueprintType)
+struct FQuestsInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly)
+	TArray <const UQuestInfoBase*> QuestsInfo;
+	
 };
 
 class UDataAssetChainQuests;
@@ -81,5 +107,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Quest System")
 	void EndOfDay();
+
+	UFUNCTION(BlueprintCallable ,Category = "Quest System")
+	void GetAllChainQuestsInfo(FChainsQuestsInfo & OutInfo);
+
+	UFUNCTION(BlueprintCallable ,Category = "Quest System")
+	void GetChainQuestQuestsInfo(const UChainQuest* ChainQuest, FQuestsInfo & OutInfo);
+
+	UFUNCTION(BlueprintCallable ,Category = "Quest System")
+	void GetEndedChainQuestQuestsInfo(const UChainQuest* ChainQuest, FQuestsInfo & OutInfo);
+	
 	
 };

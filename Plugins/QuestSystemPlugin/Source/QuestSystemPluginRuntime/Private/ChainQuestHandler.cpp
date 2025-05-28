@@ -4,6 +4,7 @@
 #include "EndQuestInfo.h"
 #include "QuestInfo.h"
 #include "QuestTagsManager.h"
+#include "QuestWorldSubsystem.h"
 
 FChainQuestHandler::FChainQuestHandler(const UChainQuest* InChainQuest)
 {
@@ -15,16 +16,16 @@ FChainQuestHandler::FChainQuestHandler(const UChainQuest* InChainQuest)
 		return Node->QuestNodeType ==  EQuestNodeType::StartNode;
 	});
 
-	UQuestRuntimeNode* a = *StartNodePtr;
-	
 	check(StartNodePtr);
 
+	UQuestRuntimeNode* StartNode = *StartNodePtr;
+
 	//We store the first quest node
-	CurrentNode = a->OutputPins[0]->Connection->Parent;
-	
+	CurrentNode = StartNode->OutputPins[0]->Connection->Parent;
+	QuestsInfos.Add(CurrentNode->QuestInfo);
 }
 
-bool FChainQuestHandler::CheckCurrentNodeConditions()
+bool FChainQuestHandler::CheckCurrentNodeConditions(const UQuestWorldSubsystem* UQuestWorldSubsystem)
 {
 	check(CurrentNode)
 
@@ -36,13 +37,14 @@ bool FChainQuestHandler::CheckCurrentNodeConditions()
 	
 	for (const TSubclassOf<ACondition>& Condition : Conditions)
 	{
-		if (Condition->GetDefaultObject<ACondition>()->CheckCondition())
+		if (Condition->GetDefaultObject<ACondition>()->CheckCondition(UQuestWorldSubsystem))
 		{
 			CurrentNode = CurrentNode->OutputPins[Index]->Connection->Parent;
+			QuestsInfos.Add(CurrentNode->QuestInfo);
 			
 			if (CurrentNode->QuestNodeType == EQuestNodeType::QuestNode)
 			{
-				return CheckCurrentNodeConditions();
+				return CheckCurrentNodeConditions(UQuestWorldSubsystem);
 			}
 			if(CurrentNode->QuestNodeType == EQuestNodeType::EndNode)
 			{
@@ -72,6 +74,7 @@ bool FChainQuestHandler::CheckCurrentEndDay(const int CurrentDay)
 	{
 		//By default the pin selected if the quest expires is the first one
 		CurrentNode = CurrentNode->OutputPins[0]->Connection->Parent;
+		QuestsInfos.Add(CurrentNode->QuestInfo);
 		return CheckCurrentEndDay(CurrentDay);
 	}
 
