@@ -78,43 +78,57 @@ private:
 
 public:
 
+	// This property has all the Tags added to the system it is the main way to create conditions
 	UPROPERTY(BlueprintReadOnly, Category = "Quest System")
 	FGameplayTagContainer QuestGameplayTagsContainer;
-	
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+
+	// Adds the tags to the GamplayTagContainer QuestGameplayTagsContainer
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Add Gameplay Tags", ToolTip = "Adds the tags to the GamplayTagContainer QuestGameplayTagsContainer"))
 	void AddGameplayTags(const TArray<FGameplayTag>& GameplayTags);
 
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	// Adds and initialize the chainquests in the system
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Initialize Chain Quests", ToolTip = "Adds and initialize the chain quests in the system"))
 	void InitializeChainQuests(const UDataAssetChainQuests* DataAssetInitializer);
 
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	// Check the conditions on the not finished quests
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Check On Going Quests Conditions", ToolTip = "Check the conditions of the on going quests"))
 	virtual void CheckOnGoingQuestConditions();
 
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	// Adds a chain quest to the system and initializes the chain quest
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Add Chain Quest", ToolTip = "Adds a chain quest in the system and initializes the chain quest"))
 	virtual void AddChainQuest(const UChainQuest* ToAddChainQuest);
 
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	// Checks if the chain quest exists in the on going quests
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Find Chain Quest", ToolTip = "Retruns if a Chain Quest allready exists in the system"))
 	bool FindChainQuest(const UChainQuest* InChainQuest);
-	
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+
+	// Adds a chain quest to the Map CalendarChainQuests, 
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Add Chain Quest To Calendar",
+		ToolTip = "Adds a chain quest to the calendar, when the system reaches the input day, the system will initilize the chain quest"))
 	void AddChainQuestToCalendar(const UChainQuest* ChainQuest, const int Day);
 
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	// Check the calendar map and adds the quest if the conditions are meet
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Find Chain Quest", ToolTip = "Retruns if a Chain Quest allready exists in the system"))
 	void CheckCalendar();
 
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	// Check the on going quests end day if the day has been reached the system advance the quest by the first condition
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "Check on going quests dates", ToolTip = "Check the end date of the on going chain quests"))
 	void CheckCalendarOnGoingQuests();
 
-	UFUNCTION(BlueprintCallable, Category = "Quest System")
+	// Function to be called when the external time system requires this advance 1 day in the system
+	UFUNCTION(BlueprintCallable, Category = "Quest System", meta = (DisplayName = "End Of Day", ToolTip = "Advance 1 day in the system"))
 	void EndOfDay();
 
-	UFUNCTION(BlueprintCallable ,Category = "Quest System")
+	// Gets the info of the chain quests
+	UFUNCTION(BlueprintCallable ,Category = "Quest System", meta = (DisplayName = "Get All Chain Quests Info", ToolTip = "Returns two array with the chain quests"))
 	void GetAllChainQuestsInfo(FChainsQuestsInfo & OutInfo);
 
-	UFUNCTION(BlueprintCallable ,Category = "Quest System")
+	// Gets all the Quests form a chain quest
+	UFUNCTION(BlueprintCallable ,Category = "Quest System", meta = (DisplayName = "Get Quests From Chain Quest", ToolTip = "Returns an array of quest info"))
 	void GetChainQuestQuestsInfo(const UChainQuest* ChainQuest, FQuestsInfo & OutInfo);
 
-	UFUNCTION(BlueprintCallable ,Category = "Quest System")
+	// Gets all the Quests form an ended chain quest
+	UFUNCTION(BlueprintCallable ,Category = "Quest System", meta = (DisplayName = "Get Quests From Ended Chain Quest", ToolTip = "Returns an array of quest info"))
 	void GetEndedChainQuestQuestsInfo(const UChainQuest* ChainQuest, FQuestsInfo & OutInfo);
 	
 	

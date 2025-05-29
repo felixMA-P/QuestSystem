@@ -16,7 +16,7 @@ struct FNewNodeAction : public FEdGraphSchemaAction
 	FEdGraphSchemaAction(InNodeCategory, InMenuDesc, InToolTip, InGruping), ClassTemplate(InClassTemplate) {}
 
 	virtual UEdGraphNode* PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode) override;
-
+	
 protected:
 	const UClass* ClassTemplate = nullptr;
 };

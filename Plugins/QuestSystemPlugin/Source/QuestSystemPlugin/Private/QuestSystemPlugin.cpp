@@ -104,8 +104,8 @@ void FQuestSystemPluginModule::StartupModule()
 	StyleSet->SetContentRoot(ContentDir);
 
 	// Create the brushes for the different uses
-	FSlateImageBrush* ThumbnailBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("CustomAssetThumbnail"), TEXT(".png")), FVector2D(120.f, 120.f));
-	FSlateImageBrush* IconBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("CustomAssetIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
+	FSlateImageBrush* ThumbnailBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("QuestIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
+	FSlateImageBrush* IconBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("QuestIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
 	FSlateImageBrush* NodeAddPinIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeAddPinIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
 	FSlateImageBrush* NodeDeletePinIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeDeleteNodeIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
 	FSlateImageBrush* NodeDeleteNodeIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeDeletePinIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
