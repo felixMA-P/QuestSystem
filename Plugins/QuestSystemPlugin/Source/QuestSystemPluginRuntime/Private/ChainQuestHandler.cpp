@@ -25,7 +25,7 @@ FChainQuestHandler::FChainQuestHandler(const UChainQuest* InChainQuest)
 	QuestsInfos.Add(CurrentNode->QuestInfo);
 }
 
-bool FChainQuestHandler::CheckCurrentNodeConditions(const UQuestWorldSubsystem* UQuestWorldSubsystem)
+bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World)
 {
 	check(CurrentNode)
 
@@ -37,20 +37,37 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(const UQuestWorldSubsystem* 
 	
 	for (const TSubclassOf<ACondition>& Condition : Conditions)
 	{
-		if (Condition->GetDefaultObject<ACondition>()->CheckCondition(UQuestWorldSubsystem))
+		ACondition* AuxCondition = World->SpawnActor<ACondition>(Condition);
+
+		if (!AuxCondition){ return false; }
+		
+		//if (Condition->GetDefaultObject<ACondition>()->CheckCondition(UQuestWorldSubsystem))
+		if (AuxCondition->CheckCondition())
 		{
 			CurrentNode = CurrentNode->OutputPins[Index]->Connection->Parent;
 			QuestsInfos.Add(CurrentNode->QuestInfo);
 			
+			if (AuxCondition)
+			{
+				AuxCondition->Destroy();
+			}
+			
 			if (CurrentNode->QuestNodeType == EQuestNodeType::QuestNode)
 			{
-				return CheckCurrentNodeConditions(UQuestWorldSubsystem);
+				
+				return CheckCurrentNodeConditions(World);
 			}
 			if(CurrentNode->QuestNodeType == EQuestNodeType::EndNode)
 			{
 				return true;
 			}
 		}
+
+		if (AuxCondition)
+		{
+			AuxCondition->Destroy();
+		}
+		
 		Index++;
 	}
 	

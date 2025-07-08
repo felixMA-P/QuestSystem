@@ -20,7 +20,7 @@ TSharedRef<SWidget> FChainQuestAssetPrimaryTabFactory::CreateTabBody(const FWork
 
 	SGraphEditor::FGraphEditorEvents GraphEvents;
 	GraphEvents.OnSelectionChanged.BindRaw(LocalApp.Get(), &FChainQuestAssetEditorApp::OnGraphSelectionChanged);
-
+	
 	TSharedPtr<SGraphEditor> GraphEditor =
 		SNew(SGraphEditor)
 		.GraphEvents(GraphEvents)

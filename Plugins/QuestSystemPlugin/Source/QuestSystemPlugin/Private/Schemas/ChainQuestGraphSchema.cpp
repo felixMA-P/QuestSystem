@@ -28,6 +28,7 @@ void UChainQuestGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Co
 	
 	ContextMenuBuilder.AddAction(NewNodeAction);
 	ContextMenuBuilder.AddAction(NewEndNodeAction);
+	
 }
 
 const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const UEdGraphPin* A,
@@ -53,6 +54,7 @@ void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 	Graph.Modify();
 	
 }
+
 
 UEdGraphNode* FNewNodeAction::PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location,
                                             bool bSelectNewNode)

@@ -58,7 +58,7 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 
 	for (FChainQuestHandler* OnGoingChainQuest : ChainQuests)
 	{
-		if (OnGoingChainQuest->CheckCurrentNodeConditions(this))
+		if (OnGoingChainQuest->CheckCurrentNodeConditions(GetWorld()))
 		{
 			const UEndQuestInfo* EndQuestInfo = Cast<UEndQuestInfo>(OnGoingChainQuest->CurrentNode->QuestInfo);
 			
@@ -69,7 +69,9 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 			
 			if (EndQuestInfo->EndOutput != nullptr)
 			{
-				EndQuestInfo->EndOutput->GetDefaultObject<ACondition>()->CheckCondition(this);
+				ACondition* AuxCondition = GetWorld()->SpawnActor<ACondition>(EndQuestInfo->EndOutput);
+				AuxCondition->CheckCondition();
+				AuxCondition->Destroy();
 			}
 			
 			AuxEndedChainQuests.Add(OnGoingChainQuest);
@@ -98,11 +100,12 @@ void UQuestWorldSubsystem::AddChainQuest(const UChainQuest* ToAddChainQuest)
 		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
 		return;
 	}
-	
-	if (ToAddChainQuest->StartCondition->GetDefaultObject<ACondition>()->CheckCondition(this))
+
+	if (ACondition* AuxCondition = GetWorld()->SpawnActor<ACondition>(ToAddChainQuest->StartCondition); AuxCondition && AuxCondition->CheckCondition())
 	{
 		ChainQuests.Add(ToAddChainQuest->GetHandler());
 		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
+		AuxCondition->Destroy();
 	}
 	
 }
@@ -199,7 +202,7 @@ void UQuestWorldSubsystem::GetEndedChainQuestQuestsInfo(const UChainQuest* Chain
 	if (!ChainQuest) return;
 	
 	FChainQuestHandler** HandlerPtr = EndChainQuests.FindByPredicate([ChainQuest](FChainQuestHandler* ChainQuestHandler)
-	 {
+	{
 		  return ChainQuestHandler->ChainQuest == ChainQuest;
 	});
 	

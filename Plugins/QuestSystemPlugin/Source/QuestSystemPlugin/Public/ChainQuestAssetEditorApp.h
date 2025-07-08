@@ -45,6 +45,8 @@ public:
 	
 	void OnGraphSelectionChanged(const FGraphPanelSelectionSet& Selection);
 	
+	
+	
 	FName PrimaryTabName = FName(TEXT("ChainQuestAssetPrimaryTab"));
 	FName PropertiesTabName = FName(TEXT("ChainQuestAssetPropertiesTab"));
 	FName AppModeName = FName(TEXT("ChainQuestAssetAppMode"));
