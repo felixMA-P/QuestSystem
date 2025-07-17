@@ -70,9 +70,9 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 			
 			if (EndQuestInfo->EndResult != nullptr)
 			{
-				AEndQuestResult* Result = GetWorld()->SpawnActor<AEndQuestResult>(EndQuestInfo->EndResult);
-				Result->ExecuteResult();
-				Result->Destroy();
+				UEndQuestResult* Result = NewObject<UEndQuestResult>(EndQuestInfo->EndResult);
+				Result->ExecuteResult(GetWorld());
+				delete Result;
 			}
 			
 			AuxEndedChainQuests.Add(OnGoingChainQuest);
@@ -102,11 +102,11 @@ void UQuestWorldSubsystem::AddChainQuest(const UChainQuest* ToAddChainQuest)
 		return;
 	}
 
-	if (ACondition* AuxCondition = GetWorld()->SpawnActor<ACondition>(ToAddChainQuest->StartCondition); AuxCondition && AuxCondition->CheckCondition())
+	if (UCondition* AuxCondition = NewObject<UCondition>(ToAddChainQuest->StartCondition); AuxCondition && AuxCondition->CheckCondition(GetWorld()))
 	{
 		ChainQuests.Add(ToAddChainQuest->GetHandler());
 		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
-		AuxCondition->Destroy();
+		delete AuxCondition;
 	}
 	
 }

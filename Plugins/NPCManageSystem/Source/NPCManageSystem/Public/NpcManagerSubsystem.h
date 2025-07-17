@@ -14,7 +14,7 @@ class ANPC;
  * 
  * Felix Martin Arroyo
  */
-UCLASS()
+UCLASS(Blueprintable, BlueprintType)
 class NPCMANAGESYSTEM_API UNpcManagerSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()

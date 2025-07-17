@@ -11,8 +11,8 @@ class ABasicActor;
 /**
  * 
  */
-UCLASS()
-class NPCMANAGESYSTEM_API UEntitiesSubsystem : public UGameInstanceSubsystem
+UCLASS(Blueprintable, BlueprintType)
+class NPCMANAGESYSTEM_API UEntitiesSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 

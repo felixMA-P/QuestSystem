@@ -3,14 +3,14 @@
 #include "EndQuestResult.h"
 
 
-AEndQuestResult::AEndQuestResult()
+UEndQuestResult::UEndQuestResult()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	
 }
 
-void AEndQuestResult::ExecuteResult()
+void UEndQuestResult::ExecuteResult(UWorld* World)
 {
-	ExecuteResultEvent();
+	ExecuteResultEvent(World);
 }
 
 

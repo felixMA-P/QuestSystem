@@ -8,7 +8,7 @@
 
 
 class FChainQuestHandler;
-class ACondition;
+class UCondition;
 class UChainQuestGraph;
 
 UCLASS(BlueprintType, Blueprintable)
@@ -29,7 +29,7 @@ public:
 	bool bHasCalendarDates = false;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<ACondition> StartCondition;
+	TSubclassOf<UCondition> StartCondition;
 	
 	UPROPERTY(BlueprintReadWrite)
 	UChainQuestGraph* ChainQuestGraph = nullptr;

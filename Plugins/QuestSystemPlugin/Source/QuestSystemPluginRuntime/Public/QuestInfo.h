@@ -24,7 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) int DayToComplete = 0;
 
 	UPROPERTY(EditAnywhere, NoClear)
-	TMap<TSubclassOf<ACondition>, FText> OutPuts;
+	TMap<TSubclassOf<UCondition>, FText> OutPuts;
 	
 private:
 	

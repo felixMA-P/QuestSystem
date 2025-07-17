@@ -9,14 +9,14 @@
 class UQuestWorldSubsystem;
 
 UCLASS(BlueprintType, Blueprintable)
-class QUESTSYSTEMPLUGINRUNTIME_API ACondition : public AActor
+class QUESTSYSTEMPLUGINRUNTIME_API UCondition : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	virtual bool CheckCondition();
+	virtual bool CheckCondition(UWorld* World);
 	
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
-	bool CheckConditionEvent();
+	bool CheckConditionEvent(UWorld* World);
 };

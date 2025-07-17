@@ -6,18 +6,18 @@
 #include "EndQuestResult.generated.h"
 
 UCLASS(BlueprintType, Blueprintable)
-class QUESTSYSTEMPLUGINRUNTIME_API AEndQuestResult : public AActor
+class QUESTSYSTEMPLUGINRUNTIME_API UEndQuestResult : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	AEndQuestResult();
+	UEndQuestResult();
 	
-	virtual void ExecuteResult();
+	virtual void ExecuteResult(UWorld* World);
 
 protected:
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void ExecuteResultEvent();
+	void ExecuteResultEvent(UWorld* World);
 	
 };

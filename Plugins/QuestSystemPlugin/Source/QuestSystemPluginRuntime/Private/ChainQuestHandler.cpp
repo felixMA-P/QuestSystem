@@ -31,32 +31,28 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World)
 
 	UQuestInfo* Info = Cast<UQuestInfo>(CurrentNode->QuestInfo);
 
-	TArray<TSubclassOf<ACondition>> Conditions;
+	TArray<TSubclassOf<UCondition>> Conditions;
 	Info->OutPuts.GetKeys(Conditions);
 	int Index = 0;
 	
-	for (const TSubclassOf<ACondition>& Condition : Conditions)
+	for (const TSubclassOf<UCondition>& Condition : Conditions)
 	{
-		ACondition* AuxCondition = World->SpawnActor<ACondition>(Condition);
+		check(Condition);
+		
+		UCondition* AuxCondition = NewObject<UCondition>(Condition);
 
 		if (!AuxCondition){ return false; }
 		
-		//if (Condition->GetDefaultObject<ACondition>()->CheckCondition(UQuestWorldSubsystem))
-		if (AuxCondition->CheckCondition())
+		if (AuxCondition->CheckCondition(World))
 		{
 			CurrentNode = CurrentNode->OutputPins[Index]->Connection->Parent;
 			QuestsInfos.Add(CurrentNode->QuestInfo);
 			
-			if (AuxCondition)
-			{
-				AuxCondition->Destroy();
-			}
-			
 			if (CurrentNode->QuestNodeType == EQuestNodeType::QuestNode)
 			{
-				
 				return CheckCurrentNodeConditions(World);
 			}
+			
 			if(CurrentNode->QuestNodeType == EQuestNodeType::EndNode)
 			{
 				return true;
@@ -65,7 +61,7 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World)
 
 		if (AuxCondition)
 		{
-			AuxCondition->Destroy();
+			delete AuxCondition;
 		}
 		
 		Index++;

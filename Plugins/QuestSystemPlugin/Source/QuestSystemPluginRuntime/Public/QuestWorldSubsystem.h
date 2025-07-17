@@ -45,7 +45,7 @@ class UChainQuest;
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestWorldSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
