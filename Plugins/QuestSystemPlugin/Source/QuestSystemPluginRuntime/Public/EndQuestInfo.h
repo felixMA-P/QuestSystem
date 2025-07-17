@@ -7,6 +7,7 @@
 #include "QuestInfoBase.h"
 #include "EndQuestInfo.generated.h"
 
+class AEndQuestResult;
 class UChainQuest;
 
 UCLASS(BlueprintType)
@@ -19,7 +20,7 @@ public:
 	FString Title = TEXT("");
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<ACondition> EndOutput;
+	TSubclassOf<AEndQuestResult> EndResult;
 
 	UPROPERTY(EditAnywhere)
 	UChainQuest* NextChainQuest = nullptr;

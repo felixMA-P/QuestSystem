@@ -1,0 +1,23 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "NPCManageSystem",
+	"Description": "A system that manages the NPCs",
+	"Category": "Other",
+	"CreatedBy": "Felix Martin Arroyo",
+	"CreatedByURL": "https://www.linkedin.com/in/felix-martín-arroyo-5a1755200/",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "NPCManageSystem",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

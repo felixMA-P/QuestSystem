@@ -9,6 +9,7 @@
 #include "ChainQuestHandler.h"
 #include "DataAssetChainQuests.h"
 #include "EndQuestInfo.h"
+#include "EndQuestResult.h"
 #include "QuestInfo.h"
 #include "QuestTagsManager.h"
 
@@ -67,11 +68,11 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 				AddChainQuest(EndQuestInfo->NextChainQuest);
 			}
 			
-			if (EndQuestInfo->EndOutput != nullptr)
+			if (EndQuestInfo->EndResult != nullptr)
 			{
-				ACondition* AuxCondition = GetWorld()->SpawnActor<ACondition>(EndQuestInfo->EndOutput);
-				AuxCondition->CheckCondition();
-				AuxCondition->Destroy();
+				AEndQuestResult* Result = GetWorld()->SpawnActor<AEndQuestResult>(EndQuestInfo->EndResult);
+				Result->ExecuteResult();
+				Result->Destroy();
 			}
 			
 			AuxEndedChainQuests.Add(OnGoingChainQuest);
