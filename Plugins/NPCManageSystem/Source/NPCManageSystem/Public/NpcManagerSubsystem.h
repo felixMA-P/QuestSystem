@@ -24,13 +24,13 @@ public:
 	void InitNPCS();
 	
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
-	void AddNPC(ANPC* NPC);
+	void AddNPC(AActor* NPC);
 
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
 	void RemoveNPC(const FGameplayTag& NameTag);
 
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
-	ANPC* GetNPC(const FGameplayTag& NameTag);
+	AActor* GetNPC(const FGameplayTag& NameTag);
 
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
 	void MoveNPC(const FGameplayTag& NameTag, const FVector& Location);
@@ -38,10 +38,12 @@ public:
 private:
 
 	UPROPERTY()
-	TMap<FGameplayTag, ANPC*> TagNPCsMap;
+	TMap<FGameplayTag, AActor*> TagNPCsMap;
 
 protected:
-
+	
+	virtual void RegisterNPC(AActor* Actor);
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;

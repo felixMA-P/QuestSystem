@@ -19,24 +19,26 @@ class NPCMANAGESYSTEM_API UEntitiesSubsystem : public UWorldSubsystem
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "EntitiesSystem")
-	void AddItem(ABasicActor* Actor);
+	void AddItem(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable, Category = "EntitiesSystem")
 	void RemoveItem(FGameplayTag EntityTag);
 
 	UFUNCTION(BlueprintCallable, Category = "EntitiesSystem")
-	ABasicActor* GetItem(FGameplayTag EntityTag);
+	AActor* GetItem(FGameplayTag EntityTag);
 	
 private:
 	
 	UPROPERTY()
-	TMap<FGameplayTag, ABasicActor*> TagBasicActorMap;
+	TMap<FGameplayTag, AActor*> TagBasicActorMap;
 
 	
 protected:
 
 	virtual void InitEntities();
-
+	
+	virtual void RegisterNewEntity(AActor* Actor);
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;

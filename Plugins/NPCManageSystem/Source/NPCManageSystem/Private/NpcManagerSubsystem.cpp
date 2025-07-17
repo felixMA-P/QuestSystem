@@ -3,7 +3,7 @@
 
 #include "NpcManagerSubsystem.h"
 #include "Kismet/GameplayStatics.h"
-#include "NPC.h"
+#include "NPCSystemComponent.h"
 #include "Misc/LowLevelTestAdapter.h"
 
 
@@ -11,21 +11,23 @@ void UNpcManagerSubsystem::InitNPCS()
 {
 	TArray<AActor*> OutNpcs;
 	
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANPC::StaticClass(), OutNpcs);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutNpcs);
 
 	for (AActor* Npc : OutNpcs)
 	{
-		ANPC* NPC = Cast<ANPC>(Npc);
-		AddNPC(NPC);
+		AddNPC(Npc);
 	}
 }
 
-void UNpcManagerSubsystem::AddNPC(ANPC* NPC)
+void UNpcManagerSubsystem::AddNPC(AActor* NPC)
 {
 	CHECK(NPC);
-	if(NPC->NameTag.IsValid())
+
+	UNPCSystemComponent* Comp = NPC->GetComponentByClass<UNPCSystemComponent>();
+	
+	if(Comp && Comp->Tag.IsValid())
 	{
-		TagNPCsMap.Add(NPC->NameTag ,NPC);
+		TagNPCsMap.Add(Comp->Tag ,NPC);
 	}
 	else
 	{
@@ -38,9 +40,9 @@ void UNpcManagerSubsystem::RemoveNPC(const FGameplayTag& NameTag)
 	TagNPCsMap.Remove(NameTag);
 }
 
-ANPC* UNpcManagerSubsystem::GetNPC(const FGameplayTag& NameTag)
+AActor* UNpcManagerSubsystem::GetNPC(const FGameplayTag& NameTag)
 {
-	ANPC ** NpcPtr = TagNPCsMap.Find(NameTag);
+	AActor** NpcPtr = TagNPCsMap.Find(NameTag);
 
 	if (!NpcPtr || !*NpcPtr)
 	{
@@ -53,17 +55,26 @@ ANPC* UNpcManagerSubsystem::GetNPC(const FGameplayTag& NameTag)
 
 void UNpcManagerSubsystem::MoveNPC(const FGameplayTag& NameTag, const FVector& Location)
 {
-	ANPC* NpcPtr = GetNPC(NameTag);
+	AActor* NpcPtr = GetNPC(NameTag);
 
 	check(NpcPtr);
 	
 	NpcPtr->SetActorLocation(Location);
 }
 
+void UNpcManagerSubsystem::RegisterNPC(AActor* Actor)
+{
+	if (Actor)
+	{
+		AddNPC(Actor);
+	}
+}
+
 void UNpcManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	InitNPCS();
+	GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::RegisterNPC));
 }
 
 void UNpcManagerSubsystem::Deinitialize()

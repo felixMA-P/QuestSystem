@@ -3,24 +3,30 @@
 
 #include "EntitiesSubsystem.h"
 
-#include "BasicActor.h"
+#include "EntitiesSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-void UEntitiesSubsystem::AddItem(ABasicActor* Actor)
+void UEntitiesSubsystem::AddItem(AActor* Actor)
 {
 	check(Actor);
-	TagBasicActorMap.Add(Actor->ItemTag, Actor);
+	
+	UEntitiesSystemComponent* Comp = Actor->GetComponentByClass<UEntitiesSystemComponent>();
+
+	if (Comp && Comp->Tag.IsValid())
+	{
+		TagBasicActorMap.Add(Comp->Tag, Actor);
+	}
 }
 
-void UEntitiesSubsystem::RemoveItem(FGameplayTag EntityTag)
+void UEntitiesSubsystem::RemoveItem(const FGameplayTag EntityTag)
 {
 	TagBasicActorMap.Remove(EntityTag);
 }
 
-ABasicActor* UEntitiesSubsystem::GetItem(FGameplayTag EntityTag)
+AActor* UEntitiesSubsystem::GetItem(const FGameplayTag EntityTag)
 {
 
-	ABasicActor** EntityPtr = TagBasicActorMap.Find(EntityTag);
+	AActor** EntityPtr = TagBasicActorMap.Find(EntityTag);
 	
 	// checkf(EntityPtr, *FString::Printf(TEXT("There isn't a entity associated in the subsystem with this tag: %s"), *EntityTag.GetTagName().ToString()));
 	// checkf(*EntityPtr, *FString::Printf(TEXT("There isn't a entity associated with this entity %s"), *EntityTag.GetTagName().ToString()));
@@ -40,22 +46,28 @@ void UEntitiesSubsystem::InitEntities()
 
 	TArray<AActor*> OutEntities;
 	
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABasicActor::StaticClass(), OutEntities);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutEntities);
 
 	for (AActor* Entity : OutEntities)
 	{
-		ABasicActor* Ent = Cast<ABasicActor>(Entity);
-		if (Ent && Ent->ItemTag.IsValid())
-		{
-			AddItem(Ent);
-		}
+		AddItem(Entity);
 	}
 	
+}
+
+void UEntitiesSubsystem::RegisterNewEntity(AActor* Actor)
+{
+	if (Actor)
+	{
+		AddItem(Actor);
+	}
 }
 
 void UEntitiesSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	InitEntities();
+	GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UEntitiesSubsystem::RegisterNewEntity));
 }
 
 void UEntitiesSubsystem::Deinitialize()
