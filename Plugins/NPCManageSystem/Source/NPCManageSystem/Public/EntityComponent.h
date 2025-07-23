@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "EntitiesSystemComponent.generated.h"
+#include "EntityComponent.generated.h"
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class NPCMANAGESYSTEM_API UEntitiesSystemComponent : public UActorComponent
+class NPCMANAGESYSTEM_API UEntityComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	UEntitiesSystemComponent();
+	UEntityComponent();
 
 protected:
 	virtual void BeginPlay() override;

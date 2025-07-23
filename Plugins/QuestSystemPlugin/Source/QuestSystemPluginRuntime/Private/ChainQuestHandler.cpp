@@ -39,11 +39,7 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World)
 	{
 		check(Condition);
 		
-		UCondition* AuxCondition = NewObject<UCondition>(Condition);
-
-		if (!AuxCondition){ return false; }
-		
-		if (AuxCondition->CheckCondition(World))
+		if (Condition.GetDefaultObject()->CheckCondition(World))
 		{
 			CurrentNode = CurrentNode->OutputPins[Index]->Connection->Parent;
 			QuestsInfos.Add(CurrentNode->QuestInfo);
@@ -57,11 +53,6 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World)
 			{
 				return true;
 			}
-		}
-
-		if (AuxCondition)
-		{
-			delete AuxCondition;
 		}
 		
 		Index++;

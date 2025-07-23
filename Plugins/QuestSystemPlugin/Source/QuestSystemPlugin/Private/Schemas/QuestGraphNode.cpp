@@ -25,7 +25,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 			 return Pin->Direction == EGPD_Input;
 		 });
 
-	 	const int CurrentNumberOfInputs = InputPins.Num();
+	 	const int CurrentNumberOfInputs = InputPins.Num() + 1;
 	 	FString CurrentInputName = TEXT("Input");
 	 	FString NumberS = FString::FromInt(CurrentNumberOfInputs);
 	 	CurrentInputName = CurrentInputName.Append(NumberS);

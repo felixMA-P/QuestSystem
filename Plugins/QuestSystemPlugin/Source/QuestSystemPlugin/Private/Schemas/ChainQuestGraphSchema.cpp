@@ -26,6 +26,7 @@ void UChainQuestGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Co
 			0
 		));
 	
+	
 	ContextMenuBuilder.AddAction(NewNodeAction);
 	ContextMenuBuilder.AddAction(NewEndNodeAction);
 	
@@ -53,6 +54,16 @@ void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 	Graph.AddNode(StartNode, true, true);
 	Graph.Modify();
 	
+}
+
+bool UChainQuestGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const
+{
+	if (!Graph || !Node) return false;
+	
+	Graph->RemoveNode(Node);
+	
+	Graph->Modify();
+	return true;
 }
 
 

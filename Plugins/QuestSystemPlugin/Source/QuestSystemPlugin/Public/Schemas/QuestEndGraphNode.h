@@ -39,4 +39,5 @@ private:
 	
 	TDelegate<void(), FDefaultDelegateUserPolicy> DeleteNodeDelegate;
 	TDelegate<void(), FDefaultDelegateUserPolicy> AddNewInputPinDelegate;
+	TDelegate<void(), FDefaultDelegateUserPolicy> DeleteInputPinDelegate;
 };

@@ -2,19 +2,27 @@
 
 
 #include "EntitiesSubsystem.h"
-
-#include "EntitiesSystemComponent.h"
+#include "EntityComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void UEntitiesSubsystem::AddItem(AActor* Actor)
 {
 	check(Actor);
 	
-	UEntitiesSystemComponent* Comp = Actor->GetComponentByClass<UEntitiesSystemComponent>();
-
-	if (Comp && Comp->Tag.IsValid())
+	UEntityComponent* Comp = Actor->FindComponentByClass<UEntityComponent>();
+	
+	if (Comp)
 	{
-		TagBasicActorMap.Add(Comp->Tag, Actor);
+		if (Comp->Tag.IsValid())
+		{
+			TagBasicActorMap.Add(Comp->Tag, Actor);
+		}
+#if WITH_EDITOR
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Tag is not valid check the value in the actor: %s"), *Actor->GetActorLabel());
+		}
+#endif
 	}
 }
 
@@ -41,20 +49,6 @@ AActor* UEntitiesSubsystem::GetItem(const FGameplayTag EntityTag)
 	
 }
 
-void UEntitiesSubsystem::InitEntities()
-{
-
-	TArray<AActor*> OutEntities;
-	
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutEntities);
-
-	for (AActor* Entity : OutEntities)
-	{
-		AddItem(Entity);
-	}
-	
-}
-
 void UEntitiesSubsystem::RegisterNewEntity(AActor* Actor)
 {
 	if (Actor)
@@ -63,11 +57,24 @@ void UEntitiesSubsystem::RegisterNewEntity(AActor* Actor)
 	}
 }
 
+void UEntitiesSubsystem::InitEntities(const FActorsInitializedParams& ActorsInitializedParams)
+{
+	TArray<AActor*> OutEntities;
+	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutEntities);
+
+	for (AActor* Entity : OutEntities)
+	{
+		AddItem(Entity);
+	}
+}
+
 void UEntitiesSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	InitEntities();
-	GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UEntitiesSubsystem::RegisterNewEntity));
+	
+	OnActorsInitializedDelegate = GetWorld()->OnActorsInitialized.Add(UWorld::FOnWorldInitializedActors::FDelegate::CreateUObject(this, &UEntitiesSubsystem::InitEntities));
+	OnRegisterNewEntityDelegate = GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UEntitiesSubsystem::RegisterNewEntity));
 }
 
 void UEntitiesSubsystem::Deinitialize()

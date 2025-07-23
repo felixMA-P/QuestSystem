@@ -22,22 +22,25 @@ public:
 	void AddItem(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable, Category = "EntitiesSystem")
-	void RemoveItem(FGameplayTag EntityTag);
+	void RemoveItem(const FGameplayTag EntityTag);
 
 	UFUNCTION(BlueprintCallable, Category = "EntitiesSystem")
-	AActor* GetItem(FGameplayTag EntityTag);
+	AActor* GetItem(const FGameplayTag EntityTag);
 	
 private:
 	
 	UPROPERTY()
 	TMap<FGameplayTag, AActor*> TagBasicActorMap;
-
 	
+	FDelegateHandle OnActorsInitializedDelegate;
+	FDelegateHandle OnRegisterNewEntityDelegate;
+
 protected:
 
-	virtual void InitEntities();
 	
 	virtual void RegisterNewEntity(AActor* Actor);
+
+	void InitEntities(const FActorsInitializedParams& ActorsInitializedParams);
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

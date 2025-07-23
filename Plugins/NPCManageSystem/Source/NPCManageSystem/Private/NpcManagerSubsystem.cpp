@@ -5,19 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NPCSystemComponent.h"
 #include "Misc/LowLevelTestAdapter.h"
-
-
-void UNpcManagerSubsystem::InitNPCS()
-{
-	TArray<AActor*> OutNpcs;
-	
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutNpcs);
-
-	for (AActor* Npc : OutNpcs)
-	{
-		AddNPC(Npc);
-	}
-}
+ 
 
 void UNpcManagerSubsystem::AddNPC(AActor* NPC)
 {
@@ -25,22 +13,27 @@ void UNpcManagerSubsystem::AddNPC(AActor* NPC)
 
 	UNPCSystemComponent* Comp = NPC->GetComponentByClass<UNPCSystemComponent>();
 	
-	if(Comp && Comp->Tag.IsValid())
+	if(Comp)
 	{
-		TagNPCsMap.Add(Comp->Tag ,NPC);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("The NPC: %s Doesn't have a tag set up"), *NPC->GetActorLabel());
+		if (Comp->Tag.IsValid())
+		{
+			TagNPCsMap.Add(Comp->Tag ,NPC);
+		}
+#if WITH_EDITOR
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("The NPC: %s Doesn't have a tag set up"), *NPC->GetActorLabel());
+		}
+#endif
 	}
 }
 
-void UNpcManagerSubsystem::RemoveNPC(const FGameplayTag& NameTag)
+void UNpcManagerSubsystem::RemoveNPC(const FGameplayTag NameTag)
 {
 	TagNPCsMap.Remove(NameTag);
 }
 
-AActor* UNpcManagerSubsystem::GetNPC(const FGameplayTag& NameTag)
+AActor* UNpcManagerSubsystem::GetNPC(const FGameplayTag NameTag)
 {
 	AActor** NpcPtr = TagNPCsMap.Find(NameTag);
 
@@ -53,7 +46,7 @@ AActor* UNpcManagerSubsystem::GetNPC(const FGameplayTag& NameTag)
 	return *NpcPtr;
 }
 
-void UNpcManagerSubsystem::MoveNPC(const FGameplayTag& NameTag, const FVector& Location)
+void UNpcManagerSubsystem::MoveNPC(const FGameplayTag NameTag, const FVector& Location)
 {
 	AActor* NpcPtr = GetNPC(NameTag);
 
@@ -70,11 +63,23 @@ void UNpcManagerSubsystem::RegisterNPC(AActor* Actor)
 	}
 }
 
+void UNpcManagerSubsystem::InitNpcList(const FActorsInitializedParams& ActorsInitializedParams)
+{
+	TArray<AActor*> OutNpcs;
+	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutNpcs);
+
+	for (AActor* Npc : OutNpcs)
+	{
+		AddNPC(Npc);
+	}
+}
+
 void UNpcManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	InitNPCS();
 	GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::RegisterNPC));
+	OnActorsInitializedDelegate = GetWorld()->OnActorsInitialized.Add(UWorld::FOnWorldInitializedActors::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::InitNpcList));
 }
 
 void UNpcManagerSubsystem::Deinitialize()

@@ -18,7 +18,7 @@ UQuestEndGraphNode::UQuestEndGraphNode()
 	 		return Pin->Direction == EGPD_Input;
 	 	});
 
-	    const int CurrentNumberOfInputs = InputPins.Num();
+	    const int CurrentNumberOfInputs = InputPins.Num() - 1;
 	 	FString CurrentInputName = TEXT("Input");
 	 	FString NumberS = FString::FromInt(CurrentNumberOfInputs);
 	 	CurrentInputName = CurrentInputName.Append(NumberS);
@@ -31,6 +31,24 @@ UQuestEndGraphNode::UQuestEndGraphNode()
 	 	GetGraph()->NotifyGraphChanged();
 	 	GetGraph()->Modify();
 	 });
+
+	DeleteInputPinDelegate = FExecuteAction::CreateLambda(
+	 [this]()
+	 {
+		 TArray<UEdGraphPin*> InputPins = GetAllPins().FilterByPredicate([](UEdGraphPin * Pin)
+		 {
+			 return Pin->Direction == EEdGraphPinDirection::EGPD_Input;
+		 });
+	 	
+		 if (InputPins.IsEmpty()) return;
+
+		if (UEdGraphPin* PinToRemove = InputPins.Last())
+		{
+			RemovePin(PinToRemove);
+			GetGraph()->NotifyGraphChanged();
+			GetGraph()->Modify();
+		}
+	});
 }
 
 FText UQuestEndGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -63,6 +81,14 @@ void UQuestEndGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeCo
 		FText::FromString("Creates a new pin"),
 		FSlateIcon(TEXT("QuestSystemEditorStyle"), TEXT("QuestEditor.NodeAddPinIcon")),
 		FUIAction( AddNewInputPinDelegate )
+		);
+
+	Section.AddMenuEntry(
+		TEXT("DeleteInputPinEntry"),
+		FText::FromString("Delete Input Pin"),
+		FText::FromString("Deletes the last input added pin"),
+		FSlateIcon(TEXT("QuestSystemEditorStyle"), TEXT("QuestEditor.NodeDeletePinIcon")),
+		FUIAction( DeleteInputPinDelegate )
 		);
 }
 

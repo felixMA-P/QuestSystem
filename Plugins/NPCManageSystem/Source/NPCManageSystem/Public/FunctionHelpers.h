@@ -6,25 +6,25 @@
 #include "EntitiesSubsystem.h"
 #include "NpcManagerSubsystem.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "UFunctionHelpers.generated.h"
+#include "FunctionHelpers.generated.h"
 
 
 UCLASS()
-class NPCMANAGESYSTEM_API UUFunctionHelpers : public UBlueprintFunctionLibrary
+class NPCMANAGESYSTEM_API UFunctionHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
 public:
 	
-	UUFunctionHelpers(){}
+	UFunctionHelpers(){}
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Subsystems")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="CustomSubsystemsAccess")
 	static UNpcManagerSubsystem* GetNpcManager(UWorld* WorldContext)
 	{
 		return WorldContext->GetSubsystem<UNpcManagerSubsystem>();
 	}
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Subsystems")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="CustomSubsystemsAccess")
 	static UEntitiesSubsystem* GetEntitiesManager(UWorld* WorldContext)
 	{
 		return WorldContext->GetSubsystem<UEntitiesSubsystem>();

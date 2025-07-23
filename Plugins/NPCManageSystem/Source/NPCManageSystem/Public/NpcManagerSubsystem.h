@@ -20,29 +20,30 @@ class NPCMANAGESYSTEM_API UNpcManagerSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-
-	void InitNPCS();
 	
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
 	void AddNPC(AActor* NPC);
 
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
-	void RemoveNPC(const FGameplayTag& NameTag);
+	void RemoveNPC(const FGameplayTag NameTag);
 
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
-	AActor* GetNPC(const FGameplayTag& NameTag);
+	AActor* GetNPC(const FGameplayTag NameTag);
 
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
-	void MoveNPC(const FGameplayTag& NameTag, const FVector& Location);
+	void MoveNPC(const FGameplayTag NameTag, const FVector& Location);
 
 private:
 
 	UPROPERTY()
 	TMap<FGameplayTag, AActor*> TagNPCsMap;
+	FDelegateHandle OnActorsInitializedDelegate;
 
 protected:
 	
 	virtual void RegisterNPC(AActor* Actor);
+
+	void InitNpcList(const FActorsInitializedParams& ActorsInitializedParams);
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
