@@ -25,10 +25,13 @@ TSharedRef<SWidget> FChainQuestAssetPrimaryTabFactory::CreateTabBody(const FWork
 		SNew(SGraphEditor)
 		.GraphEvents(GraphEvents)
 		.IsEditable(true)
-		.GraphToEdit(LocalApp->GetWorkingGraph());
+		.GraphToEdit(LocalApp->GetWorkingGraph()
+		);
 	
 	LocalApp->SetWorkingGraphUI(GraphEditor);
-	
+
+	FSlateApplication::Get().SetKeyboardFocus(GraphEditor, EFocusCause::SetDirectly);
+
 	return SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
 				.FillHeight(1.0f)

@@ -26,7 +26,6 @@ FChainQuestAssetAppMode::FChainQuestAssetAppMode(TSharedPtr<FChainQuestAssetEdit
 				)
 		)
 	);
-
 	
 }
 

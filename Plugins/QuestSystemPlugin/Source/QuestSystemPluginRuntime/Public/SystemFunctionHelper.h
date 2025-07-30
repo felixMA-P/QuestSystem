@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "QuestWorldSubsystem.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "SystemFunctionHelper.generated.h"
+
+
+class UQuestWorldSubsystem;
 
 /**
  * 
@@ -17,13 +19,10 @@ class QUESTSYSTEMPLUGINRUNTIME_API USystemFunctionHelper : public UBlueprintFunc
 
 public:
 	
-	USystemFunctionHelper(){};
+	USystemFunctionHelper();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="CustomSubsystemsAccess")
-	static UQuestWorldSubsystem* GetQuestSystem(UWorld* WorldContext)
-	{
-		return WorldContext->GetSubsystem<UQuestWorldSubsystem>();
-	}
+	static UQuestWorldSubsystem* GetQuestSystem(UWorld* WorldContext);
 	
 };
 

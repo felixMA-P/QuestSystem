@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "ChainQuestHandler.h"
+#include "GameplayTagContainer.h"
 #include "ChainQuest.h"
 #include "QuestWorldSubsystem.generated.h"
 
@@ -22,10 +23,10 @@ struct FChainsQuestsInfo
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Quest System")
 	TArray <const UChainQuest*> ChainQuests;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Quest System")
 	TArray <const UChainQuest*> EndChainQuests;
 	
 };
@@ -35,7 +36,7 @@ struct FQuestsInfo
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Quest System")
 	TArray <const UQuestInfoBase*> QuestsInfo;
 	
 };

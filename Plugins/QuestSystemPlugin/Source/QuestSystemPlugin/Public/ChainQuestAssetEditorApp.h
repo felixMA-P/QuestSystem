@@ -10,7 +10,7 @@ class UChainQuest;
 /*
  * Initializes the data for the asset and serves as a connection between the interface (@WorkingGraph) and the data (@WorkingAsset)
  */
-class FChainQuestAssetEditorApp : public FWorkflowCentricApplication, public FEditorUndoClient, public FNotifyHook
+class FChainQuestAssetEditorApp : public FWorkflowCentricApplication, public FEditorUndoClient, public FNotifyHook, public FEditorDelegates
 {
 
 public:
@@ -44,8 +44,6 @@ public:
 	void SetSelectedNodeDetailView(TSharedPtr<class IDetailsView> InDetailsView);
 	
 	void OnGraphSelectionChanged(const FGraphPanelSelectionSet& Selection);
-	
-	
 	
 	FName PrimaryTabName = FName(TEXT("ChainQuestAssetPrimaryTab"));
 	FName PropertiesTabName = FName(TEXT("ChainQuestAssetPropertiesTab"));

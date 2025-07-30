@@ -43,7 +43,7 @@ public:
 	UPROPERTY()
 	FVector2D Position;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "RuntimeNode")
 	UQuestInfoBase* QuestInfo;
 
 	UPROPERTY()
@@ -56,6 +56,6 @@ class QUESTSYSTEMPLUGINRUNTIME_API UChainQuestGraph : public UObject
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite,  Category = "Quest System")
 	TArray<UQuestRuntimeNode*> Nodes;
 };

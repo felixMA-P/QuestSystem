@@ -17,13 +17,13 @@ public:
 
 	UQuestInfo();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly) FText Title = FText::FromString("Quest");
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "QuestInfo") FText Title = FText::FromString("Quest");
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly) FText Description = FText::FromString("Description");
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "QuestInfo") FText Description = FText::FromString("Description");
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly) int DayToComplete = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "QuestInfo") int DayToComplete = 0;
 
-	UPROPERTY(EditAnywhere, NoClear)
+	UPROPERTY(EditAnywhere, NoClear, Category = "QuestInfo")
 	TMap<TSubclassOf<UCondition>, FText> OutPuts;
 	
 private:

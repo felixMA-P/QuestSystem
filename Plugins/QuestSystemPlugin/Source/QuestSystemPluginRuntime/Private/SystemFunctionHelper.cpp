@@ -2,3 +2,14 @@
 
 
 #include "SystemFunctionHelper.h"
+#include "QuestWorldSubsystem.h"
+#include "Engine/World.h"
+
+USystemFunctionHelper::USystemFunctionHelper()
+{
+}
+
+UQuestWorldSubsystem* USystemFunctionHelper::GetQuestSystem(UWorld* WorldContext)
+{
+	return WorldContext->GetSubsystem<UQuestWorldSubsystem>();
+}

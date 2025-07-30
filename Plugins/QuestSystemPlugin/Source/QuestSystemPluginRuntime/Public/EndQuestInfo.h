@@ -16,13 +16,13 @@ class QUESTSYSTEMPLUGINRUNTIME_API UEndQuestInfo : public UQuestInfoBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "EndQuest")
 	FString Title = TEXT("");
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "EndQuest")
 	TSubclassOf<UEndQuestResult> EndResult;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "EndQuest")
 	UChainQuest* NextChainQuest = nullptr;
 
 private:

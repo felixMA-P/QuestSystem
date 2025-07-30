@@ -3,10 +3,10 @@
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "QuestSystemPlugin",
-	"Description": "",
-	"Category": "Other",
+	"Description": "This plugin allows you to create a new asset called Chain Quest and you can create the structure of a chain quest in this package",
+	"Category": "Quest System",
 	"CreatedBy": "Felix Martin Arroyo",
-	"CreatedByURL": "",
+	"CreatedByURL": "https://www.linkedin.com/in/felix-martín-arroyo-5a1755200/",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
@@ -18,12 +18,14 @@
 		{
 			"Name": "QuestSystemPlugin",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": "Win64"
 		},
 		{
 			"Name": "QuestSystemPluginRuntime",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": "Win64"
 		}
 	]
 }

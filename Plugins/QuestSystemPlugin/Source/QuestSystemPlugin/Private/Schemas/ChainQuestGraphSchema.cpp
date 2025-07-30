@@ -58,7 +58,10 @@ void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 
 bool UChainQuestGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const
 {
-	if (!Graph || !Node) return false;
+	if (Node == nullptr || Graph == nullptr || Node->GetGraph() != Graph)
+	{
+		return false;
+	}
 	
 	Graph->RemoveNode(Node);
 	

@@ -30,7 +30,6 @@ void FChainQuestAssetEditorApp::InitEditor(const EToolkitMode::Type Mode, TShare
 		UEdGraph::StaticClass(),
 		UChainQuestGraphSchema::StaticClass()
 	);
-	
 
 	InitAssetEditor(
 		Mode,

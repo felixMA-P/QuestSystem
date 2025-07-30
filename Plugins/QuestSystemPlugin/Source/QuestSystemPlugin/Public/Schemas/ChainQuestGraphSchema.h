@@ -22,7 +22,7 @@ protected:
 };
 
 UCLASS()
-class UChainQuestGraphSchema : public UEdGraphSchema
+class UChainQuestGraphSchema : public UEdGraphSchema, public FEditorUndoClient
 {
 
 	GENERATED_BODY()
@@ -36,5 +36,6 @@ public:
 	virtual void CreateDefaultNodesForGraph(UEdGraph& Graph) const override;
 
 	virtual bool SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const override;
+	
 	
 };

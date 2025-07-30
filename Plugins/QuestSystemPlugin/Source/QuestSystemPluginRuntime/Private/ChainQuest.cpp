@@ -3,7 +3,6 @@
 #include "ChainQuest.h"
 
 #include "ChainQuestHandler.h"
-#include "QuestTagsManager.h"
 
 FChainQuestHandler* UChainQuest::GetHandler() const
 {

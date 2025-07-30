@@ -2,13 +2,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "Condition.h"
 #include "UObject/Object.h"
 #include "ChainQuest.generated.h"
 
 
 class FChainQuestHandler;
-class UCondition;
 class UChainQuestGraph;
 
 UCLASS(BlueprintType, Blueprintable)
@@ -22,16 +21,16 @@ public:
 
 	UChainQuest();
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChainQuestQuest")
 	FText Title;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ChainQuestQuest")
 	bool bHasCalendarDates = false;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "ChainQuestQuest")
 	TSubclassOf<UCondition> StartCondition;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "ChainQuestQuest")
 	UChainQuestGraph* ChainQuestGraph = nullptr;
 
 	
