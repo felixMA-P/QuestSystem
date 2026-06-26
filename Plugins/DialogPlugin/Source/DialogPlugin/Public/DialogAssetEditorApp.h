@@ -1,0 +1,55 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "SGraphPanel.h"
+#include "WorkflowOrientedApp/WorkflowCentricApplication.h"
+
+class UDialog;
+
+class FDialogAssetEditorApp : public FWorkflowCentricApplication, public FEditorUndoClient, public FNotifyHook, public FEditorDelegates
+{
+public:
+	virtual void RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
+
+	void InitEditor(const EToolkitMode::Type Mode, TSharedPtr<class IToolkitHost>& InitToolKitHost, UObject* Object);
+
+	UDialog* GetWorkingAsset() { return WorkingAsset; }
+	UEdGraph* GetWorkingGraph() { return WorkingGraph; }
+
+	virtual FName GetToolkitFName() const override { return FName(TEXT("DialogEditorApp")); }
+	virtual FText GetBaseToolkitName() const override { return FText::FromString(TEXT("DialogEditorApp")); }
+	virtual FString GetWorldCentricTabPrefix() const override { return TEXT("DialogEditorApp"); }
+	virtual FLinearColor GetWorldCentricTabColorScale() const override { return FLinearColor(0.2f, 0.5f, 0.3f, 0.5f); }
+	virtual FString GetDocumentationLink() const override { return TEXT("https://github.com/felixMA-P/QuestSystem"); }
+	virtual void OnToolkitHostingStarted(const TSharedRef<IToolkit>& Toolkit) override {}
+	virtual void OnToolkitHostingFinished(const TSharedRef<IToolkit>& Toolkit) override {}
+
+	virtual void OnClose() override;
+	virtual void SaveAsset_Execute() override;
+
+	void OnGraphChanged(const FEdGraphEditAction& EditAction);
+	void OnNodeDetailViewPropertiesUpdated(const FPropertyChangedEvent& Event);
+
+	void SetWorkingGraphUI(TSharedPtr<SGraphEditor> InWorkingGraphUI) { WorkingGraphUI = InWorkingGraphUI; }
+	void SetSelectedNodeDetailView(TSharedPtr<class IDetailsView> InDetailsView);
+
+	void OnGraphSelectionChanged(const FGraphPanelSelectionSet& Selection);
+
+	FName PrimaryTabName   = FName(TEXT("DialogAssetPrimaryTab"));
+	FName PropertiesTabName = FName(TEXT("DialogAssetPropertiesTab"));
+	FName AppModeName       = FName(TEXT("DialogAssetAppMode"));
+
+protected:
+	virtual void UpdateWorkingAssetFromGraph();
+	virtual void UpdateEditorGraphFromWorkingAsset();
+	class UDialogGraphNodeBase* GetSelectedNode(const FGraphPanelSelectionSet& Selection);
+
+private:
+	UPROPERTY() UDialog* WorkingAsset = nullptr;
+	UPROPERTY() UEdGraph* WorkingGraph = nullptr;
+
+	TSharedPtr<SGraphEditor> WorkingGraphUI = nullptr;
+	TSharedPtr<IDetailsView> DetailsView;
+
+	FDelegateHandle GraphChangeListenerHandle;
+};
