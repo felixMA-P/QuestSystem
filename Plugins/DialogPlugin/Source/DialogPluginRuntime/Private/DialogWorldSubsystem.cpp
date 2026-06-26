@@ -87,11 +87,11 @@ bool UDialogWorldSubsystem::SelectDialogResponse(const UDialog* InDialog, int32 
 	{
 		const UDialogEndInfo* EndInfo = Cast<UDialogEndInfo>(Handler->CurrentNode->DialogInfo);
 
-		// Notify the UI the dialog is over before running any follow-up logic.
-		OnDialogEnded.Broadcast(InDialog);
-
 		EndDialogs.Add(Handler);
 		Dialogs.Remove(Handler);
+
+		// Broadcast after the handler is moved so GetCurrentDialogLine returns nullptr (correct) not a stale cast.
+		OnDialogEnded.Broadcast(InDialog);
 
 		if (EndInfo && EndInfo->EndResult != nullptr)
 		{

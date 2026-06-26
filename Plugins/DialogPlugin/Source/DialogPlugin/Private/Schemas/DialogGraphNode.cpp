@@ -149,11 +149,11 @@ void UDialogGraphNode::SyncPinsWithOutputs()
 	}
 	while (NumOutputsInData > NumGraphPins)
 	{
-		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(DialogInfo->Outputs[NumGraphPins].ResponseText.ToString()));
+		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(FString::Printf(TEXT("Output_%d"), NumGraphPins)));
 		NumGraphPins++;
 	}
 
-	// Refresh pin names to match current ResponseText values
+	// Refresh pin display labels from ResponseText; PinName stays stable
 	OutputPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
 	{
 		return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
@@ -161,7 +161,7 @@ void UDialogGraphNode::SyncPinsWithOutputs()
 
 	for (int32 Index = 0; Index < OutputPins.Num(); ++Index)
 	{
-		OutputPins[Index]->PinName = FName(DialogInfo->Outputs[Index].ResponseText.ToString());
+		OutputPins[Index]->PinFriendlyName = DialogInfo->Outputs[Index].ResponseText;
 	}
 }
 
