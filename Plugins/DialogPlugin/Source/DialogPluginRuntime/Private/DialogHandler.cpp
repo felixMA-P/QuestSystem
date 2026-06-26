@@ -5,9 +5,9 @@
 #include "DialogLineInfo.h"
 #include "DialogWorldSubsystem.h"
 
-FDialogHandler::FDialogHandler(const UDialog* InDialog)
+void UDialogHandler::Initialize(const UDialog* InDialog)
 {
-	Dialog = InDialog;
+	Dialog = const_cast<UDialog*>(InDialog);
 
 	UDialogRuntimeNode** StartNodePtr = Dialog->DialogGraph->Nodes.FindByPredicate([](const UDialogRuntimeNode* Node)
 	{
@@ -21,39 +21,33 @@ FDialogHandler::FDialogHandler(const UDialog* InDialog)
 	DialogInfos.Add(CurrentNode->DialogInfo);
 }
 
-bool FDialogHandler::CheckCurrentNodeConditions(UWorld* World)
+bool UDialogHandler::SelectResponse(int32 ResponseIndex, UWorld* World)
 {
 	check(CurrentNode);
+	check(CurrentNode->DialogNodeType == EDialogNodeType::DialogNode);
 
-	UDialogLineInfo* Info = Cast<UDialogLineInfo>(CurrentNode->DialogInfo);
-	if (!Info) return false;
+	if (!CurrentNode->OutputPins.IsValidIndex(ResponseIndex)) return false;
+	if (!CurrentNode->OutputPins[ResponseIndex]->Connection) return false;
 
-	TArray<TSubclassOf<UDialogCondition>> Conditions;
-	Info->Outputs.GetKeys(Conditions);
-	int Index = 0;
-
-	for (const TSubclassOf<UDialogCondition>& Condition : Conditions)
+	// Fire the event associated with this response, if one is set
+	UDialogLineInfo* LineInfo = Cast<UDialogLineInfo>(CurrentNode->DialogInfo);
+	if (LineInfo && LineInfo->Outputs.IsValidIndex(ResponseIndex))
 	{
-		check(Condition);
-
-		if (Condition.GetDefaultObject()->CheckCondition(World))
+		const FDialogOutput& Output = LineInfo->Outputs[ResponseIndex];
+		if (Output.Event)
 		{
-			CurrentNode = CurrentNode->OutputPins[Index]->Connection->Parent;
-			DialogInfos.Add(CurrentNode->DialogInfo);
-
-			if (CurrentNode->DialogNodeType == EDialogNodeType::DialogNode)
-			{
-				return CheckCurrentNodeConditions(World);
-			}
-
-			if (CurrentNode->DialogNodeType == EDialogNodeType::EndNode)
-			{
-				return true;
-			}
+			Output.Event.GetDefaultObject()->ExecuteEvent(World);
 		}
-
-		Index++;
 	}
 
-	return false;
+	// Advance to the connected node
+	CurrentNode = CurrentNode->OutputPins[ResponseIndex]->Connection->Parent;
+	DialogInfos.Add(CurrentNode->DialogInfo);
+
+	return CurrentNode->DialogNodeType == EDialogNodeType::EndNode;
+}
+
+UDialogLineInfo* UDialogHandler::GetCurrentDialogLine() const
+{
+	return Cast<UDialogLineInfo>(CurrentNode->DialogInfo);
 }

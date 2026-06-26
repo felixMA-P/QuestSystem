@@ -5,7 +5,7 @@
 #include "UObject/Object.h"
 #include "Dialog.generated.h"
 
-class FDialogHandler;
+class UDialogHandler;
 class UDialogGraph;
 
 UCLASS(BlueprintType, Blueprintable)
@@ -14,7 +14,7 @@ class DIALOGPLUGINRUNTIME_API UDialog : public UObject
 	GENERATED_BODY()
 
 public:
-	FDialogHandler* GetHandler() const;
+	UDialogHandler* GetHandler(UObject* Outer) const;
 
 	UDialog();
 

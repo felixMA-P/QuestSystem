@@ -28,8 +28,6 @@ void UDialogWorldSubsystem::AddGameplayTags(const TArray<FGameplayTag>& Gameplay
 	{
 		DialogGameplayTagsContainer.AddTag(Tag);
 	}
-
-	CheckOnGoingDialogConditions();
 }
 
 void UDialogWorldSubsystem::InitializeDialogs(const UDialogDataAsset* DataAsset)
@@ -46,37 +44,6 @@ void UDialogWorldSubsystem::InitializeDialogs(const UDialogDataAsset* DataAsset)
 	}
 }
 
-void UDialogWorldSubsystem::CheckOnGoingDialogConditions()
-{
-	TArray<FDialogHandler*> AuxEndedDialogs;
-
-	for (FDialogHandler* OnGoingDialog : Dialogs)
-	{
-		if (OnGoingDialog->CheckCurrentNodeConditions(GetWorld()))
-		{
-			const UDialogEndInfo* EndInfo = Cast<UDialogEndInfo>(OnGoingDialog->CurrentNode->DialogInfo);
-
-			if (EndInfo->NextDialog != nullptr)
-			{
-				AddDialog(EndInfo->NextDialog);
-			}
-
-			if (EndInfo->EndResult != nullptr)
-			{
-				EndInfo->EndResult.GetDefaultObject()->ExecuteResult(GetWorld());
-			}
-
-			AuxEndedDialogs.Add(OnGoingDialog);
-		}
-	}
-
-	for (FDialogHandler* Dialog : AuxEndedDialogs)
-	{
-		EndDialogs.Add(Dialog);
-		Dialogs.Remove(Dialog);
-	}
-}
-
 void UDialogWorldSubsystem::AddDialog(const UDialog* ToAddDialog)
 {
 	if (!ToAddDialog) return;
@@ -84,32 +51,85 @@ void UDialogWorldSubsystem::AddDialog(const UDialog* ToAddDialog)
 
 	if (ToAddDialog->StartCondition == nullptr)
 	{
-		Dialogs.Add(ToAddDialog->GetHandler());
+		Dialogs.Add(ToAddDialog->GetHandler(this));
+		OnDialogLineChanged.Broadcast(ToAddDialog, Dialogs.Last()->GetCurrentDialogLine());
 		return;
 	}
 
 	if (ToAddDialog->StartCondition.GetDefaultObject()->CheckCondition(GetWorld()))
 	{
-		Dialogs.Add(ToAddDialog->GetHandler());
+		Dialogs.Add(ToAddDialog->GetHandler(this));
+		OnDialogLineChanged.Broadcast(ToAddDialog, Dialogs.Last()->GetCurrentDialogLine());
 	}
 }
 
 bool UDialogWorldSubsystem::FindDialog(const UDialog* InDialog)
 {
-	return Dialogs.FindByPredicate([InDialog](const FDialogHandler* Handler)
+	return Dialogs.FindByPredicate([InDialog](const UDialogHandler* Handler)
 	{
 		return Handler->Dialog == InDialog;
 	}) != nullptr;
 }
 
+bool UDialogWorldSubsystem::SelectDialogResponse(const UDialog* InDialog, int32 ResponseIndex)
+{
+	UDialogHandler** HandlerPtr = Dialogs.FindByPredicate([InDialog](UDialogHandler* Handler)
+	{
+		return Handler->Dialog == InDialog;
+	});
+
+	if (!HandlerPtr) return false;
+
+	UDialogHandler* Handler = *HandlerPtr;
+	const bool bEnded = Handler->SelectResponse(ResponseIndex, GetWorld());
+
+	if (bEnded)
+	{
+		const UDialogEndInfo* EndInfo = Cast<UDialogEndInfo>(Handler->CurrentNode->DialogInfo);
+
+		// Notify the UI the dialog is over before running any follow-up logic.
+		OnDialogEnded.Broadcast(InDialog);
+
+		EndDialogs.Add(Handler);
+		Dialogs.Remove(Handler);
+
+		if (EndInfo && EndInfo->EndResult != nullptr)
+		{
+			EndInfo->EndResult.GetDefaultObject()->ExecuteResult(GetWorld());
+		}
+
+		// Starting the next dialog fires OnDialogLineChanged for its first line.
+		if (EndInfo && EndInfo->NextDialog != nullptr)
+		{
+			AddDialog(EndInfo->NextDialog);
+		}
+	}
+	else
+	{
+		OnDialogLineChanged.Broadcast(InDialog, Handler->GetCurrentDialogLine());
+	}
+
+	return bEnded;
+}
+
+UDialogLineInfo* UDialogWorldSubsystem::GetCurrentDialogLine(const UDialog* InDialog)
+{
+	UDialogHandler** HandlerPtr = Dialogs.FindByPredicate([InDialog](UDialogHandler* Handler)
+	{
+		return Handler->Dialog == InDialog;
+	});
+
+	return HandlerPtr ? (*HandlerPtr)->GetCurrentDialogLine() : nullptr;
+}
+
 void UDialogWorldSubsystem::GetAllDialogsInfo(FDialogsInfo& OutInfo)
 {
-	for (const FDialogHandler* Element : Dialogs)
+	for (const UDialogHandler* Element : Dialogs)
 	{
 		OutInfo.Dialogs.Add(Element->Dialog);
 	}
 
-	for (const FDialogHandler* Element : EndDialogs)
+	for (const UDialogHandler* Element : EndDialogs)
 	{
 		OutInfo.EndDialogs.Add(Element->Dialog);
 	}
@@ -119,14 +139,14 @@ void UDialogWorldSubsystem::GetDialogLinesInfo(const UDialog* InDialog, FDialogL
 {
 	if (!InDialog) return;
 
-	FDialogHandler** HandlerPtr = Dialogs.FindByPredicate([InDialog](FDialogHandler* Handler)
+	UDialogHandler** HandlerPtr = Dialogs.FindByPredicate([InDialog](UDialogHandler* Handler)
 	{
 		return Handler->Dialog == InDialog;
 	});
 
 	if (HandlerPtr)
 	{
-		OutInfo.DialogInfos = (*HandlerPtr)->DialogInfos;
+		OutInfo.DialogInfos = TArray<const UDialogInfoBase*>((*HandlerPtr)->DialogInfos);
 	}
 }
 
@@ -134,13 +154,13 @@ void UDialogWorldSubsystem::GetEndedDialogLinesInfo(const UDialog* InDialog, FDi
 {
 	if (!InDialog) return;
 
-	FDialogHandler** HandlerPtr = EndDialogs.FindByPredicate([InDialog](FDialogHandler* Handler)
+	UDialogHandler** HandlerPtr = EndDialogs.FindByPredicate([InDialog](UDialogHandler* Handler)
 	{
 		return Handler->Dialog == InDialog;
 	});
 
 	if (HandlerPtr)
 	{
-		OutInfo.DialogInfos = (*HandlerPtr)->DialogInfos;
+		OutInfo.DialogInfos = TArray<const UDialogInfoBase*>((*HandlerPtr)->DialogInfos);
 	}
 }

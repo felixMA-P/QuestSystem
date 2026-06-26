@@ -9,7 +9,9 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	[this]()
 	{
-		DialogInfo->Outputs.Add(UDialogCondition::StaticClass(), FText::FromString("Output"));
+		FDialogOutput NewOutput;
+		NewOutput.ResponseText = FText::FromString(TEXT("Response"));
+		DialogInfo->Outputs.Add(NewOutput);
 		SyncPinsWithOutputs();
 		GetGraph()->NotifyGraphChanged();
 		GetGraph()->Modify();
@@ -39,7 +41,10 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 		if (PinToRemove && PinToRemove->Direction != EEdGraphPinDirection::EGPD_Input)
 		{
 			RemovePin(PinToRemove);
-			SyncPinsWithOutputs();
+			if (DialogInfo->Outputs.Num() > 0)
+			{
+				DialogInfo->Outputs.RemoveAt(DialogInfo->Outputs.Num() - 1);
+			}
 			GetGraph()->NotifyGraphChanged();
 			GetGraph()->Modify();
 		}
@@ -76,8 +81,8 @@ void UDialogGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeCont
 
 	Section.AddMenuEntry(
 		TEXT("AddOutputPinEntry"),
-		FText::FromString("Add Output Pin"),
-		FText::FromString("Creates a new output pin"),
+		FText::FromString("Add Response Pin"),
+		FText::FromString("Creates a new player response output"),
 		FSlateIcon(TEXT("DialogSystemEditorStyle"), TEXT("DialogEditor.NodeAddPinIcon")),
 		FUIAction(AddNewOutputPinDelegate)
 	);
@@ -92,8 +97,8 @@ void UDialogGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeCont
 
 	Section.AddMenuEntry(
 		TEXT("DeleteOutputPinEntry"),
-		FText::FromString("Delete Output Pin"),
-		FText::FromString("Deletes the last output pin"),
+		FText::FromString("Delete Response Pin"),
+		FText::FromString("Deletes the last response output"),
 		FSlateIcon(TEXT("DialogSystemEditorStyle"), TEXT("DialogEditor.NodeDeletePinIcon")),
 		FUIAction(DeleteOutputPinDelegate)
 	);
@@ -128,10 +133,7 @@ UEdGraphPin* UDialogGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, c
 
 void UDialogGraphNode::SyncPinsWithOutputs()
 {
-	int NumOutputsInData = DialogInfo->Outputs.Num();
-
-	TArray<TSubclassOf<UDialogCondition>> OutKeys;
-	DialogInfo->Outputs.GetKeys(OutKeys);
+	const int NumOutputsInData = DialogInfo->Outputs.Num();
 
 	TArray<UEdGraphPin*> OutputPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
 	{
@@ -147,20 +149,19 @@ void UDialogGraphNode::SyncPinsWithOutputs()
 	}
 	while (NumOutputsInData > NumGraphPins)
 	{
-		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(DialogInfo->Outputs[OutKeys[NumGraphPins]].ToString()));
+		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(DialogInfo->Outputs[NumGraphPins].ResponseText.ToString()));
 		NumGraphPins++;
 	}
 
+	// Refresh pin names to match current ResponseText values
 	OutputPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
 	{
 		return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
 	});
 
-	int Index = 0;
-	for (UEdGraphPin* OutputPin : OutputPins)
+	for (int32 Index = 0; Index < OutputPins.Num(); ++Index)
 	{
-		OutputPin->PinName = FName(DialogInfo->Outputs[OutKeys[Index]].ToString());
-		Index++;
+		OutputPins[Index]->PinName = FName(DialogInfo->Outputs[Index].ResponseText.ToString());
 	}
 }
 

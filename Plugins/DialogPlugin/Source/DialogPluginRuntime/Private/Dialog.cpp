@@ -5,7 +5,9 @@ UDialog::UDialog()
 {
 }
 
-FDialogHandler* UDialog::GetHandler() const
+UDialogHandler* UDialog::GetHandler(UObject* Outer) const
 {
-	return new FDialogHandler(this);
+	UDialogHandler* Handler = NewObject<UDialogHandler>(Outer);
+	Handler->Initialize(this);
+	return Handler;
 }
