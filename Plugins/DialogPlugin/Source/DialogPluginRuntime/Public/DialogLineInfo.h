@@ -17,8 +17,8 @@ struct FDialogOutput
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DialogOutput")
 	FText ResponseText;
 
-	UPROPERTY(EditAnywhere, Category = "DialogOutput")
-	TSubclassOf<UDialogEvent> Event;
+	UPROPERTY(EditAnywhere, Instanced, Category = "DialogOutput")
+	UDialogEvent* Event = nullptr;
 };
 
 UCLASS(BlueprintType, Blueprintable)

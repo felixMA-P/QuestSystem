@@ -6,7 +6,7 @@
 
 // Subclass this in Blueprint or C++ to run logic when the player selects a specific dialog response.
 // ExecuteEventBP is the Blueprint-implementable entry point.
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType, Blueprintable, EditInlineNew)
 class DIALOGPLUGINRUNTIME_API UDialogEvent : public UObject
 {
 	GENERATED_BODY()
@@ -14,9 +14,9 @@ class DIALOGPLUGINRUNTIME_API UDialogEvent : public UObject
 public:
 	UDialogEvent();
 
-	virtual void ExecuteEvent(UWorld* World);
+	virtual void ExecuteEvent(UObject* WorldContextObject);
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	void ExecuteEventBP(UWorld* World);
+	UFUNCTION(BlueprintImplementableEvent, meta = (WorldContext = "WorldContextObject"))
+	void ExecuteEventBP(UObject* WorldContextObject);
 };

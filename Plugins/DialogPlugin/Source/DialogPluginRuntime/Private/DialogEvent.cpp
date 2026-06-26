@@ -4,7 +4,7 @@ UDialogEvent::UDialogEvent()
 {
 }
 
-void UDialogEvent::ExecuteEvent(UWorld* World)
+void UDialogEvent::ExecuteEvent(UObject* WorldContextObject)
 {
-	ExecuteEventBP(World);
+	ExecuteEventBP(WorldContextObject);
 }

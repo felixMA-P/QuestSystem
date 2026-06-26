@@ -36,7 +36,7 @@ bool UDialogHandler::SelectResponse(int32 ResponseIndex, UWorld* World)
 		const FDialogOutput& Output = LineInfo->Outputs[ResponseIndex];
 		if (Output.Event)
 		{
-			Output.Event.GetDefaultObject()->ExecuteEvent(World);
+			Output.Event->ExecuteEvent(World);
 		}
 	}
 
