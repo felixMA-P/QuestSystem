@@ -25,8 +25,8 @@ TSharedRef<SWidget> FChainQuestAssetPrimaryTabFactory::CreateTabBody(const FWork
 		SNew(SGraphEditor)
 		.GraphEvents(GraphEvents)
 		.IsEditable(true)
-		.GraphToEdit(LocalApp->GetWorkingGraph()
-		);
+		.AdditionalCommands(LocalApp->GetGraphEditorCommands())
+		.GraphToEdit(LocalApp->GetWorkingGraph());
 	
 	LocalApp->SetWorkingGraphUI(GraphEditor);
 

@@ -17,6 +17,8 @@ public class DialogPlugin : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"ApplicationCore",
+				"InputCore",
 				"DialogPluginRuntime",
 				"AssetTools",
 				"UnrealEd",

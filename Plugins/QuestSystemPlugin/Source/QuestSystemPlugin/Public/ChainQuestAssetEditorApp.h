@@ -22,6 +22,7 @@ public:
 	
 	UChainQuest* GetWorkingAsset() { return WorkingAsset; }
 	UEdGraph* GetWorkingGraph() { return WorkingGraph; }
+	TSharedPtr<FUICommandList> GetGraphEditorCommands() const { return GraphEditorCommands; }
 	
 	// FAssetEditorToolKit
 	virtual FName GetToolkitFName() const override { return FName(TEXT("ChainQuestEditorApp")); }
@@ -42,9 +43,21 @@ public:
 	
 	void SetWorkingGraphUI(TSharedPtr<SGraphEditor> InWorkingGraphUI) { WorkingGraphUI = InWorkingGraphUI;}
 	void SetSelectedNodeDetailView(TSharedPtr<class IDetailsView> InDetailsView);
-	
+
 	void OnGraphSelectionChanged(const FGraphPanelSelectionSet& Selection);
-	
+
+	// Graph editor commands
+	void CopySelectedNodes();
+	bool CanCopyNodes() const;
+	void CutSelectedNodes();
+	bool CanCutNodes() const;
+	void PasteNodes();
+	bool CanPasteNodes() const;
+	void DeleteSelectedNodes();
+	bool CanDeleteNodes() const;
+	void DuplicateNodes();
+	bool CanDuplicateNodes() const;
+
 	FName PrimaryTabName = FName(TEXT("ChainQuestAssetPrimaryTab"));
 	FName PropertiesTabName = FName(TEXT("ChainQuestAssetPropertiesTab"));
 	FName AppModeName = FName(TEXT("ChainQuestAssetAppMode"));
@@ -53,8 +66,10 @@ protected:
 	virtual void UpdateWorkingAssetFromGraph();
 	virtual void UpdateEditorGraphFromWorkingAsset();
 	class UQuestGraphNodeBase* GetSelectedNode(const FGraphPanelSelectionSet& Selection);
-	
+
 private:
+	void CreateGraphEditorCommands();
+
 	UPROPERTY()
 	UChainQuest* WorkingAsset = nullptr;
 
@@ -63,8 +78,7 @@ private:
 
 	TSharedPtr<SGraphEditor> WorkingGraphUI = nullptr;
 	TSharedPtr<IDetailsView> DetailsView;
+	TSharedPtr<FUICommandList> GraphEditorCommands;
 
 	FDelegateHandle GraphChangeListenerHandle;
-
-	
 };

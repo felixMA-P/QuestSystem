@@ -9,6 +9,7 @@
 #include "EdGraphUtilities.h"
 #include "KismetPins/SGraphPinColor.h"
 #include "EdGraph/EdGraphPin.h"
+#include "GraphEditorActions.h"
 
 #define LOCTEXT_NAMESPACE "FQuestSystemPluginModule"
 
@@ -89,9 +90,8 @@ struct FCustomPinFactory : public FGraphPanelPinFactory
 
 void FQuestSystemPluginModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	FGraphEditorCommands::Register();
 
-	// Set up a new asset category and include the ChainQuestAssetAction in the category
 	IAssetTools& AssetToolsModule = IAssetTools::Get();
 	EAssetTypeCategories::Type AssetType = AssetToolsModule.RegisterAdvancedAssetCategory(FName("QuestAssets"), FText::FromString(TEXT("Quest Assets")));
 	TSharedPtr<FChainQuestAssetAction> ChainQuestAsset = MakeShareable( new FChainQuestAssetAction(AssetType) );
@@ -125,9 +125,7 @@ void FQuestSystemPluginModule::StartupModule()
 
 void FQuestSystemPluginModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
-
+	FGraphEditorCommands::Unregister();
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleSet);
 	FEdGraphUtilities::UnregisterVisualPinFactory(CustomPinFactory);
 }

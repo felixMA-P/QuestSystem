@@ -22,6 +22,7 @@ TSharedRef<SWidget> FDialogAssetPrimaryTabFactory::CreateTabBody(const FWorkflow
 		SNew(SGraphEditor)
 		.GraphEvents(GraphEvents)
 		.IsEditable(true)
+		.AdditionalCommands(LocalApp->GetGraphEditorCommands())
 		.GraphToEdit(LocalApp->GetWorkingGraph());
 
 	LocalApp->SetWorkingGraphUI(GraphEditor);

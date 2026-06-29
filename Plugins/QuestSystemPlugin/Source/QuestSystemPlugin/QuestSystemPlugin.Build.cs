@@ -38,6 +38,8 @@ public class QuestSystemPlugin : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"ApplicationCore",
+				"InputCore",
 				"QuestSystemPluginRuntime",
 				"AssetTools",
 				"UnrealEd",
@@ -45,7 +47,7 @@ public class QuestSystemPlugin : ModuleRules
 				"Projects",
 				"ToolMenus",
 				"GraphEditor"
-				// ... add private dependencies that you statically link with here ...	
+				// ... add private dependencies that you statically link with here ...
 			}
 			);
 		

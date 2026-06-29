@@ -15,6 +15,7 @@ public:
 
 	UDialog* GetWorkingAsset() { return WorkingAsset; }
 	UEdGraph* GetWorkingGraph() { return WorkingGraph; }
+	TSharedPtr<FUICommandList> GetGraphEditorCommands() const { return GraphEditorCommands; }
 
 	virtual FName GetToolkitFName() const override { return FName(TEXT("DialogEditorApp")); }
 	virtual FText GetBaseToolkitName() const override { return FText::FromString(TEXT("DialogEditorApp")); }
@@ -35,6 +36,18 @@ public:
 
 	void OnGraphSelectionChanged(const FGraphPanelSelectionSet& Selection);
 
+	// Graph editor commands
+	void CopySelectedNodes();
+	bool CanCopyNodes() const;
+	void CutSelectedNodes();
+	bool CanCutNodes() const;
+	void PasteNodes();
+	bool CanPasteNodes() const;
+	void DeleteSelectedNodes();
+	bool CanDeleteNodes() const;
+	void DuplicateNodes();
+	bool CanDuplicateNodes() const;
+
 	FName PrimaryTabName   = FName(TEXT("DialogAssetPrimaryTab"));
 	FName PropertiesTabName = FName(TEXT("DialogAssetPropertiesTab"));
 	FName AppModeName       = FName(TEXT("DialogAssetAppMode"));
@@ -45,11 +58,14 @@ protected:
 	class UDialogGraphNodeBase* GetSelectedNode(const FGraphPanelSelectionSet& Selection);
 
 private:
+	void CreateGraphEditorCommands();
+
 	UPROPERTY() UDialog* WorkingAsset = nullptr;
 	UPROPERTY() UEdGraph* WorkingGraph = nullptr;
 
 	TSharedPtr<SGraphEditor> WorkingGraphUI = nullptr;
 	TSharedPtr<IDetailsView> DetailsView;
+	TSharedPtr<FUICommandList> GraphEditorCommands;
 
 	FDelegateHandle GraphChangeListenerHandle;
 };

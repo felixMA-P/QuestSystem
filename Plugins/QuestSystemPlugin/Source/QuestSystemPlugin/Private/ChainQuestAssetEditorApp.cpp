@@ -8,7 +8,10 @@
 #include "QuestInfo.h"
 #include "Schemas/QuestStartGraphNode.h"
 #include "Schemas/QuestEndGraphNode.h"
-#include  "QuestNodeType.h"
+#include "QuestNodeType.h"
+#include "EdGraphUtilities.h"
+#include "Framework/Commands/GenericCommands.h"
+#include "HAL/PlatformApplicationMisc.h"
 
 void FChainQuestAssetEditorApp::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
 {
@@ -23,6 +26,8 @@ void FChainQuestAssetEditorApp::InitEditor(const EToolkitMode::Type Mode, TShare
 	ObjectsToEdit.Add(Object);
 
 	WorkingAsset = Cast<UChainQuest>(Object);
+
+	CreateGraphEditorCommands();
 
 	WorkingGraph = FBlueprintEditorUtils::CreateNewGraph(
 		WorkingAsset,
@@ -237,4 +242,145 @@ UQuestGraphNodeBase* FChainQuestAssetEditorApp::GetSelectedNode(const FGraphPane
 		}
 	}
 	return nullptr;
+}
+
+void FChainQuestAssetEditorApp::CreateGraphEditorCommands()
+{
+	GraphEditorCommands = MakeShareable(new FUICommandList);
+
+	GraphEditorCommands->MapAction(FGenericCommands::Get().Copy,
+		FExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::CopySelectedNodes),
+		FCanExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::CanCopyNodes));
+
+	GraphEditorCommands->MapAction(FGenericCommands::Get().Cut,
+		FExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::CutSelectedNodes),
+		FCanExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::CanCutNodes));
+
+	GraphEditorCommands->MapAction(FGenericCommands::Get().Paste,
+		FExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::PasteNodes),
+		FCanExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::CanPasteNodes));
+
+	GraphEditorCommands->MapAction(FGenericCommands::Get().Delete,
+		FExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::DeleteSelectedNodes),
+		FCanExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::CanDeleteNodes));
+
+	GraphEditorCommands->MapAction(FGenericCommands::Get().Duplicate,
+		FExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::DuplicateNodes),
+		FCanExecuteAction::CreateRaw(this, &FChainQuestAssetEditorApp::CanDuplicateNodes));
+}
+
+void FChainQuestAssetEditorApp::CopySelectedNodes()
+{
+	if (!WorkingGraphUI) return;
+	FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
+	for (UObject* Obj : SelectedNodes)
+	{
+		if (UEdGraphNode* Node = Cast<UEdGraphNode>(Obj))
+			Node->PrepareForCopying();
+	}
+	FString ExportedText;
+	FEdGraphUtilities::ExportNodesToText(SelectedNodes, ExportedText);
+	FPlatformApplicationMisc::ClipboardCopy(*ExportedText);
+}
+
+bool FChainQuestAssetEditorApp::CanCopyNodes() const
+{
+	return WorkingGraphUI && WorkingGraphUI->GetSelectedNodes().Num() > 0;
+}
+
+void FChainQuestAssetEditorApp::CutSelectedNodes()
+{
+	CopySelectedNodes();
+	DeleteSelectedNodes();
+}
+
+bool FChainQuestAssetEditorApp::CanCutNodes() const
+{
+	return CanCopyNodes() && CanDeleteNodes();
+}
+
+void FChainQuestAssetEditorApp::PasteNodes()
+{
+	if (!WorkingGraphUI || !WorkingGraph) return;
+
+	FString TextToImport;
+	FPlatformApplicationMisc::ClipboardPaste(TextToImport);
+
+	WorkingGraph->Modify();
+	WorkingGraphUI->ClearSelectionSet();
+
+	TSet<UEdGraphNode*> PastedNodes;
+	FEdGraphUtilities::ImportNodesFromText(WorkingGraph, TextToImport, PastedNodes);
+
+	// Regenerate GUIDS so in UpdateWorkingAssetFromGraph never has duplicate keys.
+	for (UEdGraphNode* Node : PastedNodes)
+	{
+		for (UEdGraphPin* Pin : Node->Pins)
+		{
+			Pin->PinId = FGuid::NewGuid();
+		}
+		
+		Node->NodeGuid = FGuid::NewGuid();
+	}
+	
+	
+
+	for (UEdGraphNode* Node : PastedNodes)
+	{
+		Node->NodePosX += 50;
+		Node->NodePosY += 50;
+		WorkingGraphUI->SetNodeSelection(Node, true);
+	}
+
+	WorkingGraphUI->NotifyGraphChanged();
+}
+
+bool FChainQuestAssetEditorApp::CanPasteNodes() const
+{
+	if (!WorkingGraph) return false;
+	FString ClipboardContent;
+	FPlatformApplicationMisc::ClipboardPaste(ClipboardContent);
+	return FEdGraphUtilities::CanImportNodesFromText(WorkingGraph, ClipboardContent);
+}
+
+void FChainQuestAssetEditorApp::DeleteSelectedNodes()
+{
+	if (!WorkingGraphUI || !WorkingGraph) return;
+
+	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
+	WorkingGraphUI->ClearSelectionSet();
+
+	for (UObject* Obj : SelectedNodes)
+	{
+		UEdGraphNode* Node = Cast<UEdGraphNode>(Obj);
+		if (Node && Node->CanUserDeleteNode())
+		{
+			WorkingGraph->Modify();
+			WorkingGraph->RemoveNode(Node);
+		}
+	}
+}
+
+bool FChainQuestAssetEditorApp::CanDeleteNodes() const
+{
+	if (!WorkingGraphUI) return false;
+	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
+	for (UObject* Obj : SelectedNodes)
+	{
+		UEdGraphNode* Node = Cast<UEdGraphNode>(Obj);
+		if (Node && Node->CanUserDeleteNode())
+			return true;
+	}
+	return false;
+}
+
+void FChainQuestAssetEditorApp::DuplicateNodes()
+{
+	CopySelectedNodes();
+	PasteNodes();
+}
+
+bool FChainQuestAssetEditorApp::CanDuplicateNodes() const
+{
+	return CanCopyNodes();
 }

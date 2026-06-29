@@ -7,6 +7,7 @@
 #include "EdGraphUtilities.h"
 #include "EdGraph/EdGraphPin.h"
 #include "KismetPins/SGraphPinColor.h"
+#include "GraphEditorActions.h"
 
 #define LOCTEXT_NAMESPACE "FDialogPluginModule"
 
@@ -67,6 +68,8 @@ struct FDialogCustomPinFactory : public FGraphPanelPinFactory
 
 void FDialogPluginModule::StartupModule()
 {
+	FGraphEditorCommands::Register();
+
 	IAssetTools& AssetToolsModule = IAssetTools::Get();
 	EAssetTypeCategories::Type AssetType = AssetToolsModule.RegisterAdvancedAssetCategory(FName("DialogAssets"), FText::FromString(TEXT("Dialog Assets")));
 	TSharedPtr<FDialogAssetAction> DialogAsset = MakeShareable(new FDialogAssetAction(AssetType));
@@ -96,6 +99,7 @@ void FDialogPluginModule::StartupModule()
 
 void FDialogPluginModule::ShutdownModule()
 {
+	FGraphEditorCommands::Unregister();
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleSet);
 	FEdGraphUtilities::UnregisterVisualPinFactory(CustomPinFactory);
 }
