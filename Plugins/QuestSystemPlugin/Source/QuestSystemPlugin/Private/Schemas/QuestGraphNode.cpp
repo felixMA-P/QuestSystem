@@ -42,6 +42,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 DeleteOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
+	 	if (Pins.IsEmpty()) return;
 	 	UEdGraphPin * PinToRemove = GetPinAt(Pins.Num() - 1);
 	 	if (PinToRemove && PinToRemove->Direction != EEdGraphPinDirection::EGPD_Input)
 	 	{
@@ -135,6 +136,8 @@ UEdGraphPin* UQuestGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, co
 
 void UQuestGraphNode::SyncPinsWithOutputs()
 {
+	if (!QuestInfo) return;
+
 	int NumOfOutputPins = QuestInfo->OutPuts.Num();
 	
 	TArray<TSubclassOf<UCondition>> OutKeys;
@@ -186,11 +189,11 @@ void UQuestGraphNode::CreateDefaultOutPutPins()
 
 FText UQuestGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	check(QuestInfo);
-	
+	if (!QuestInfo) return FText::FromString("Set up the title");
+
 	if (QuestInfo->Title.IsEmpty())
 		return FText::FromString("Set up the title");
-	
+
 	return QuestInfo->Title;
 }
 

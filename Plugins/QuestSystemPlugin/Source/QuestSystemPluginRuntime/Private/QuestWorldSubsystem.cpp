@@ -11,6 +11,7 @@
 #include "EndQuestInfo.h"
 #include "EndQuestResult.h"
 #include "QuestInfo.h"
+#include "QuestSystemPluginRuntime.h"
 #include "QuestTagsManager.h"
 
 void UQuestWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -20,6 +21,11 @@ void UQuestWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UQuestWorldSubsystem::Deinitialize()
 {
+	for (FChainQuestHandler* Handler : ChainQuests)    { delete Handler; }
+	for (FChainQuestHandler* Handler : EndChainQuests) { delete Handler; }
+	ChainQuests.Empty();
+	EndChainQuests.Empty();
+
 	Super::Deinitialize();
 }
 
@@ -43,7 +49,7 @@ void UQuestWorldSubsystem::InitializeChainQuests(const UDataAssetChainQuests* Da
 {
 	if (!DataAssetInitializer)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Quest Chain Quests Initialized, the parameter is not informed"));
+		UE_LOG(LogQuestSystem, Warning, TEXT("Quest Chain Quests Initialized, the parameter is not informed"));
 		return;
 	}
 	
@@ -59,21 +65,29 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 
 	for (FChainQuestHandler* OnGoingChainQuest : ChainQuests)
 	{
+		const UQuestInfoBase* NodeInfoBeforeCheck = OnGoingChainQuest->CurrentNode ? OnGoingChainQuest->CurrentNode->QuestInfo : nullptr;
 		if (OnGoingChainQuest->CheckCurrentNodeConditions(GetWorld()))
 		{
 			const UEndQuestInfo* EndQuestInfo = Cast<UEndQuestInfo>(OnGoingChainQuest->CurrentNode->QuestInfo);
-			
+			if (!EndQuestInfo) continue;
+
 			if (EndQuestInfo->NextChainQuest != nullptr)
 			{
 				AddChainQuest(EndQuestInfo->NextChainQuest);
 			}
-			
+
 			if (EndQuestInfo->EndResult != nullptr)
 			{
 				EndQuestInfo->EndResult.GetDefaultObject()->ExecuteResult(GetWorld());
 			}
-			
+
+			UE_LOG(LogQuestSystem, Log, TEXT("ChainQuest '%s' completed"), *OnGoingChainQuest->GetChainQuest()->Title.ToString());
+			OnChainQuestCompleted.Broadcast(OnGoingChainQuest->GetChainQuest());
 			AuxEndedChainQuests.Add(OnGoingChainQuest);
+		}
+		else if (OnGoingChainQuest->CurrentNode && OnGoingChainQuest->CurrentNode->QuestInfo != NodeInfoBeforeCheck)
+		{
+			OnQuestAdvanced.Broadcast(OnGoingChainQuest->CurrentNode->QuestInfo);
 		}
 	}
 
@@ -82,7 +96,6 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 		EndChainQuests.Add(ChainQuest);
 		ChainQuests.Remove(ChainQuest);
 	}
-	
 }
 
 void UQuestWorldSubsystem::AddChainQuest(const UChainQuest* ToAddChainQuest)
@@ -95,15 +108,19 @@ void UQuestWorldSubsystem::AddChainQuest(const UChainQuest* ToAddChainQuest)
 
 	if (ToAddChainQuest->StartCondition == nullptr)
 	{
+		UE_LOG(LogQuestSystem, Log, TEXT("ChainQuest '%s' started"), *ToAddChainQuest->Title.ToString());
 		ChainQuests.Add(ToAddChainQuest->GetHandler());
 		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
+		OnChainQuestStarted.Broadcast(ToAddChainQuest);
 		return;
 	}
 
 	if (ToAddChainQuest->StartCondition.GetDefaultObject()->CheckCondition(GetWorld()))
 	{
+		UE_LOG(LogQuestSystem, Log, TEXT("ChainQuest '%s' started (condition met)"), *ToAddChainQuest->Title.ToString());
 		ChainQuests.Add(ToAddChainQuest->GetHandler());
 		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
+		OnChainQuestStarted.Broadcast(ToAddChainQuest);
 	}
 	
 }
@@ -123,13 +140,18 @@ void UQuestWorldSubsystem::AddChainQuestToCalendar(const UChainQuest* ChainQuest
 
 void UQuestWorldSubsystem::CheckCalendar()
 {
-	for (const TPair<const UChainQuest*, int> & CalendarPair : CalendarChainQuests)
+	TArray<const UChainQuest*> ToActivate;
+	for (const TPair<const UChainQuest*, int>& CalendarPair : CalendarChainQuests)
 	{
 		if (CalendarPair.Value == CurrentDay)
 		{
-			AddChainQuest(CalendarPair.Key);
-			CalendarChainQuests.Remove(CalendarPair.Key);
+			ToActivate.Add(CalendarPair.Key);
 		}
+	}
+	for (const UChainQuest* Quest : ToActivate)
+	{
+		AddChainQuest(Quest);
+		CalendarChainQuests.Remove(Quest);
 	}
 }
 
@@ -141,12 +163,12 @@ void UQuestWorldSubsystem::CheckCalendarOnGoingQuests()
 	{
 		if (OnGoingChainQuest->ChainQuest->bHasCalendarDates && OnGoingChainQuest->CheckCurrentEndDay(CurrentDay))
 		{
-			// only reaches this point of the current node is a end node
-			if (Cast<UEndQuestInfo>(OnGoingChainQuest->CurrentNode->QuestInfo)->NextChainQuest != nullptr)
+			const UEndQuestInfo* EndQuestInfo = Cast<UEndQuestInfo>(OnGoingChainQuest->CurrentNode->QuestInfo);
+			if (EndQuestInfo && EndQuestInfo->NextChainQuest != nullptr)
 			{
-				AddChainQuest(Cast<UEndQuestInfo>(OnGoingChainQuest->CurrentNode->QuestInfo)->NextChainQuest);
+				AddChainQuest(EndQuestInfo->NextChainQuest);
 			}
-			
+
 			AuxEndedChainQuests.Add(OnGoingChainQuest);
 		}
 	}

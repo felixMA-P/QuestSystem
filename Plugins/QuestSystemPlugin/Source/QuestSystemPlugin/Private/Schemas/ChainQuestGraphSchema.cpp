@@ -35,7 +35,7 @@ void UChainQuestGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Co
 const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const UEdGraphPin* A,
 	const UEdGraphPin* B) const
 {
-	if (A ==  nullptr || B == nullptr) FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Need two pins"));
+	if (A == nullptr || B == nullptr) return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Need two pins"));
 	
 	if (A->Direction == B->Direction) return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Inputs can only connect to outputs"));
 	

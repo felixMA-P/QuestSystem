@@ -2,6 +2,8 @@
 
 #include "QuestTagsManager.h"
 
+DEFINE_LOG_CATEGORY(LogQuestSystem);
+
 #define LOCTEXT_NAMESPACE "FQuestSystemPluginRuntimeModule"
 
 void FQuestSystemPluginRuntimeModule::StartupModule()

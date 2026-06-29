@@ -43,8 +43,13 @@ struct FQuestsInfo
 
 class UDataAssetChainQuests;
 class UChainQuest;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChainQuestStarted,  const UChainQuest*, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuestAdvanced,      const UQuestInfoBase*, NewQuestInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChainQuestCompleted, const UChainQuest*, Quest);
+
 /**
- * 
+ *
  */
 UCLASS(BlueprintType, Blueprintable)
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestWorldSubsystem : public UWorldSubsystem
@@ -78,6 +83,15 @@ private:
 	TArray<FChainQuestHandler*> EndChainQuests;
 
 public:
+
+	UPROPERTY(BlueprintAssignable, Category = "Quest System")
+	FOnChainQuestStarted OnChainQuestStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Quest System")
+	FOnQuestAdvanced OnQuestAdvanced;
+
+	UPROPERTY(BlueprintAssignable, Category = "Quest System")
+	FOnChainQuestCompleted OnChainQuestCompleted;
 
 	// This property has all the Tags added to the system it is the main way to create conditions
 	UPROPERTY(BlueprintReadOnly, Category = "Quest System")

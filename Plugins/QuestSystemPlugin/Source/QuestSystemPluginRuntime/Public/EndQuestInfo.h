@@ -17,7 +17,7 @@ class QUESTSYSTEMPLUGINRUNTIME_API UEndQuestInfo : public UQuestInfoBase
 
 public:
 	UPROPERTY(EditAnywhere, Category = "EndQuest")
-	FString Title = TEXT("");
+	FText Title = FText::GetEmpty();
 
 	UPROPERTY(EditAnywhere, Category = "EndQuest")
 	TSubclassOf<UEndQuestResult> EndResult;

@@ -9,14 +9,8 @@ public:
 
 	static FQuestTagsManager& Get()
 	{
-		static FQuestTagsManager* Singleton;
-		
-		if (!Singleton)
-		{
-			Singleton = new FQuestTagsManager();
-		}
-		
-		return *Singleton;
+		static FQuestTagsManager Singleton;
+		return Singleton;
 	}
 
 	void InitGameplayTags()

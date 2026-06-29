@@ -18,7 +18,7 @@ UQuestEndGraphNode::UQuestEndGraphNode()
 	 		return Pin->Direction == EGPD_Input;
 	 	});
 
-	    const int CurrentNumberOfInputs = InputPins.Num() - 1;
+	    const int CurrentNumberOfInputs = InputPins.Num() + 1;
 	 	FString CurrentInputName = TEXT("Input");
 	 	FString NumberS = FString::FromInt(CurrentNumberOfInputs);
 	 	CurrentInputName = CurrentInputName.Append(NumberS);
@@ -53,14 +53,9 @@ UQuestEndGraphNode::UQuestEndGraphNode()
 
 FText UQuestEndGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	check(QuestInfo);
-	
-	if (QuestInfo != nullptr)
-	{
-		return FText::FromString(QuestInfo->Title);
-	}
+	if (!QuestInfo) return FText::FromString("End");
 
-	return FText::FromString("");
+	return QuestInfo->Title.IsEmpty() ? FText::FromString("End") : QuestInfo->Title;
 }
 
 void UQuestEndGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const

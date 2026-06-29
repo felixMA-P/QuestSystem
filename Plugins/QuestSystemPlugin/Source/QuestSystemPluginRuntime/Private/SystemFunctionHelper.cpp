@@ -11,5 +11,6 @@ USystemFunctionHelper::USystemFunctionHelper()
 
 UQuestWorldSubsystem* USystemFunctionHelper::GetQuestSystem(UWorld* WorldContext)
 {
+	if (!WorldContext) return nullptr;
 	return WorldContext->GetSubsystem<UQuestWorldSubsystem>();
 }

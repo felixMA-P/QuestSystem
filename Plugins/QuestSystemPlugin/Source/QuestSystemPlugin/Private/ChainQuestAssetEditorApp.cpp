@@ -90,6 +90,8 @@ void FChainQuestAssetEditorApp::SetSelectedNodeDetailView(TSharedPtr<class IDeta
 
 void FChainQuestAssetEditorApp::OnGraphSelectionChanged(const FGraphPanelSelectionSet& Selection)
 {
+	if (!DetailsView) return;
+
 	UQuestGraphNodeBase* Node = GetSelectedNode(Selection);
 	if (Node)
 	{
@@ -99,7 +101,6 @@ void FChainQuestAssetEditorApp::OnGraphSelectionChanged(const FGraphPanelSelecti
 	{
 		DetailsView->SetObject(nullptr);
 	}
-	
 }
 
 void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()

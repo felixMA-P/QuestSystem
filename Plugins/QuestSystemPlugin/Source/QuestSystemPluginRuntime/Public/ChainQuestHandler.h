@@ -19,7 +19,7 @@ class FChainQuestHandler
 
 	//returns false if the chain quest continues
 	//returns true if the chain quest ends
-	bool CheckCurrentNodeConditions(UWorld* World);
+	bool CheckCurrentNodeConditions(UWorld* World, int Depth = 0);
 
 	//returns false if the chain quest continues
 	//returns true if the chain quest ends

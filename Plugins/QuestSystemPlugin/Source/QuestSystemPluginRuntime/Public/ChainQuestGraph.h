@@ -56,6 +56,6 @@ class QUESTSYSTEMPLUGINRUNTIME_API UChainQuestGraph : public UObject
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(BlueprintReadWrite,  Category = "Quest System")
+	UPROPERTY(BlueprintReadOnly, Category = "Quest System")
 	TArray<UQuestRuntimeNode*> Nodes;
 };
