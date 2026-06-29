@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Dialog.h"
-#include "DialogInfoBase.h"
 #include "UObject/Object.h"
 #include "DialogHandler.generated.h"
 
@@ -22,9 +21,6 @@ class DIALOGPLUGINRUNTIME_API UDialogHandler : public UObject
 
 	UPROPERTY()
 	UDialogRuntimeNode* CurrentNode = nullptr;
-
-	UPROPERTY()
-	TArray<UDialogInfoBase*> DialogInfos;
 
 	// Advances by the player-chosen response index.
 	// Returns true if the dialog has reached an EndNode.

@@ -18,7 +18,6 @@ void UDialogHandler::Initialize(const UDialog* InDialog)
 
 	UDialogRuntimeNode* StartNode = *StartNodePtr;
 	CurrentNode = StartNode->OutputPins[0]->Connection->Parent;
-	DialogInfos.Add(CurrentNode->DialogInfo);
 }
 
 bool UDialogHandler::SelectResponse(int32 ResponseIndex, UWorld* World)
@@ -42,7 +41,6 @@ bool UDialogHandler::SelectResponse(int32 ResponseIndex, UWorld* World)
 
 	// Advance to the connected node
 	CurrentNode = CurrentNode->OutputPins[ResponseIndex]->Connection->Parent;
-	DialogInfos.Add(CurrentNode->DialogInfo);
 
 	return CurrentNode->DialogNodeType == EDialogNodeType::EndNode;
 }
