@@ -13,6 +13,9 @@ class UDialogDataAsset;
 // Fires when the active line changes — either on dialog start or after a response is selected.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogLineChanged, UDialogLineInfo*, LineInfo);
 
+// Fires when the dialog is loaded.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogStarted);
+
 // Fires when the dialog reaches an EndNode.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogEnded);
 
@@ -31,6 +34,9 @@ protected:
 private:
 	UPROPERTY()
 	UDialogHandler* ActiveDialog = nullptr;
+	
+	UPROPERTY()
+	const UDialogDataAsset* DialogsAsset;
 
 public:
 	// Bind to this in your dialog Widget to react to each new line without polling.
@@ -40,6 +46,10 @@ public:
 	// Bind to this to close the dialog UI and trigger any post-dialog logic.
 	UPROPERTY(BlueprintAssignable, Category = "Dialog System")
 	FOnDialogEnded OnDialogEnded;
+	
+	// Bind to this to close the dialog UI and trigger any post-dialog logic.
+	UPROPERTY(BlueprintAssignable, Category = "Dialog System")
+	FOnDialogStarted OnDialogStarted;
 
 	// Tag container — used by StartCondition checks to query world/player state.
 	UPROPERTY(BlueprintReadOnly, Category = "Dialog System")
@@ -51,8 +61,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Initialize Dialogs"))
 	void InitializeDialogs(const UDialogDataAsset* DataAsset);
 
-	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Add Dialog"))
-	virtual void AddDialog(const UDialog* ToAddDialog);
+	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Start Dialog"))
+	void StartDialog(const FGameplayTag & DialogGameplayTag);
 
 	// Called by the UI when the player selects a response. Returns true if the dialog has ended.
 	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Select Dialog Response"))
@@ -61,4 +71,8 @@ public:
 	// Returns the current line so the UI can display speaker + text + response options.
 	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Get Current Dialog Line"))
 	UDialogLineInfo* GetCurrentDialogLine();
+
+private:
+	// Shared initialization path: checks StartCondition, creates the handler, and fires delegates.
+	void StartDialogInternal(UDialog* Dialog);
 };

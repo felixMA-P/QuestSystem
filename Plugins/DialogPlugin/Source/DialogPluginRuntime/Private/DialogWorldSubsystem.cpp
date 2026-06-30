@@ -5,7 +5,7 @@
 #include "DialogEndInfo.h"
 #include "DialogGraph.h"
 #include "DialogHandler.h"
-#include "DialogResult.h"
+#include "DialogEvent.h"
 
 void UDialogWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -37,30 +37,44 @@ void UDialogWorldSubsystem::InitializeDialogs(const UDialogDataAsset* DataAsset)
 		UE_LOG(LogTemp, Warning, TEXT("Dialog System: InitializeDialogs called with null DataAsset"));
 		return;
 	}
-
-	for (const UDialog* Dialog : DataAsset->Dialogs)
-	{
-		AddDialog(Dialog);
-	}
+	
+	DialogsAsset = DataAsset;
 }
 
-void UDialogWorldSubsystem::AddDialog(const UDialog* ToAddDialog)
+void UDialogWorldSubsystem::StartDialog(const FGameplayTag & DialogGameplayTag)
 {
-	if (!ToAddDialog) return;
-	if (ActiveDialog && ActiveDialog->GetDialog() == ToAddDialog) return;
-
-	if (ToAddDialog->StartCondition == nullptr)
+	if (!DialogGameplayTag.IsValid())
 	{
-		ActiveDialog = ToAddDialog->GetHandler(this);
-		OnDialogLineChanged.Broadcast(ActiveDialog->GetCurrentDialogLine());
+		UE_LOG(LogTemp, Warning, TEXT("Dialog System: DialogGameplayTag is not valid"));
 		return;
 	}
 
-	if (ToAddDialog->StartCondition.GetDefaultObject()->CheckCondition(GetWorld()))
+	if (!DialogsAsset)
 	{
-		ActiveDialog = ToAddDialog->GetHandler(this);
-		OnDialogLineChanged.Broadcast(ActiveDialog->GetCurrentDialogLine());
+		UE_LOG(LogTemp, Warning, TEXT("Dialog System: No DialogDataAsset loaded. Call InitializeDialogs first."));
+		return;
 	}
+
+	UDialog* const* FoundDialog = DialogsAsset->Dialogs.Find(DialogGameplayTag);
+	if (!FoundDialog || !*FoundDialog)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Dialog System: No dialog found for tag %s"), *DialogGameplayTag.ToString());
+		return;
+	}
+
+	StartDialogInternal(*FoundDialog);
+}
+
+void UDialogWorldSubsystem::StartDialogInternal(UDialog* Dialog)
+{
+	if (ActiveDialog && ActiveDialog->GetDialog() == Dialog) return;
+
+	if (Dialog->StartCondition && !Dialog->StartCondition.GetDefaultObject()->CheckCondition(GetWorld()))
+		return;
+
+	ActiveDialog = Dialog->GetHandler(this);
+	OnDialogStarted.Broadcast();
+	OnDialogLineChanged.Broadcast(ActiveDialog->GetCurrentDialogLine());
 }
 
 bool UDialogWorldSubsystem::SelectDialogResponse(int32 ResponseIndex)
@@ -73,16 +87,16 @@ bool UDialogWorldSubsystem::SelectDialogResponse(int32 ResponseIndex)
 	{
 		const UDialogEndInfo* EndInfo = Cast<UDialogEndInfo>(ActiveDialog->CurrentNode->DialogInfo);
 		UDialog* NextDialog           = (EndInfo && EndInfo->NextDialog) ? EndInfo->NextDialog : nullptr;
-		TSubclassOf<UDialogResult> EndResult = EndInfo ? EndInfo->EndResult : nullptr;
+		TSubclassOf<UDialogEvent> EndResult = EndInfo ? EndInfo->EndEvent : nullptr;
 
 		ActiveDialog = nullptr;
 		OnDialogEnded.Broadcast();
 
 		if (EndResult)
-			EndResult.GetDefaultObject()->ExecuteResult(GetWorld());
+			EndResult.GetDefaultObject()->ExecuteEvent(GetWorld());
 
 		if (NextDialog)
-			AddDialog(NextDialog);
+			StartDialogInternal(NextDialog);
 	}
 	else
 	{

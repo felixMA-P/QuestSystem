@@ -35,6 +35,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DialogLine")
 	FText DialogText;
 
-	UPROPERTY(EditAnywhere, Category = "DialogLine")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DialogLine")
 	TArray<FDialogOutput> Outputs;
 };

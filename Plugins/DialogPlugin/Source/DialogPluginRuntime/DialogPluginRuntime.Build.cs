@@ -7,7 +7,7 @@ public class DialogPluginRuntime : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(
-			new string[] { "Core", "GameplayTags" }
+			new string[] { "Core", "GameplayTags", "UMG" }
 		);
 
 		PrivateDependencyModuleNames.AddRange(

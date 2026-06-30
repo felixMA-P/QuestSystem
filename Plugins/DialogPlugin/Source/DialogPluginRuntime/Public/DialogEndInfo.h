@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DialogEvent.h"
 #include "DialogInfoBase.h"
-#include "DialogResult.h"
 #include "DialogEndInfo.generated.h"
 
 class UDialog;
@@ -17,7 +17,7 @@ public:
 	FString Title;
 
 	UPROPERTY(EditAnywhere, Category = "DialogEnd")
-	TSubclassOf<UDialogResult> EndResult;
+	TSubclassOf<UDialogEvent> EndEvent;
 
 	UPROPERTY(EditAnywhere, Category = "DialogEnd")
 	UDialog* NextDialog = nullptr;
