@@ -17,7 +17,7 @@ public:
 
 protected:
 	
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, Category = "Quest System|Result")
 	void ExecuteResultEvent(UWorld* World);
 	
 };

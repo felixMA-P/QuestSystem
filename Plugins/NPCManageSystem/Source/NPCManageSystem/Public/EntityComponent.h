@@ -23,7 +23,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Entity System", meta = (AllowPrivateAccess=true))
 	FGameplayTag Tag;
 	
 };

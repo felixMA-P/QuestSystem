@@ -17,6 +17,6 @@ public:
 	virtual bool CheckCondition(UWorld* World);
 	
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, Category = "Quest System|Condition")
 	bool CheckConditionEvent(UWorld* World);
 };
