@@ -6,6 +6,7 @@
 #include "DialogGraph.h"
 #include "DialogHandler.h"
 #include "DialogEvent.h"
+#include "Engine/World.h"
 
 void UDialogWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {

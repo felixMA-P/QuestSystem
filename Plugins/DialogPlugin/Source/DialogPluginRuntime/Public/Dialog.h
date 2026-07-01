@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Templates/SubclassOf.h"
 #include "DialogCondition.h"
 #include "UObject/Object.h"
 #include "Dialog.generated.h"

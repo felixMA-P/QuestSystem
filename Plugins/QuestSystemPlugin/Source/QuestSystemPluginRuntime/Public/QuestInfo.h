@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Templates/SubclassOf.h"
 #include "Condition.h"
 #include "GameplayTagContainer.h"
 #include "QuestInfoBase.h"

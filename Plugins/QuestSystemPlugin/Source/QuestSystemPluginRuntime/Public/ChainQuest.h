@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Templates/SubclassOf.h"
 #include "Condition.h"
 #include "UObject/Object.h"
 #include "ChainQuest.generated.h"

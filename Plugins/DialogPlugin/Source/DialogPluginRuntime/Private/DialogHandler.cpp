@@ -4,6 +4,7 @@
 #include "DialogGraph.h"
 #include "DialogLineInfo.h"
 #include "DialogWorldSubsystem.h"
+#include "Engine/World.h"
 
 void UDialogHandler::Initialize(const UDialog* InDialog)
 {

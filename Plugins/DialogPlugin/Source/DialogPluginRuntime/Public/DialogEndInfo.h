@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Templates/SubclassOf.h"
 #include "DialogEvent.h"
 #include "DialogInfoBase.h"
 #include "DialogEndInfo.generated.h"

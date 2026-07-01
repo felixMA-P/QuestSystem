@@ -9,18 +9,15 @@ public class QuestSystemPluginRuntime : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core", "GameplayTags",
+                "Core", "CoreUObject", "Engine", "GameplayTags",
             }
         );
 
         PrivateDependencyModuleNames.AddRange(
             new string[]
             {
-                "CoreUObject",
-                "Engine",
                 "Slate",
                 "SlateCore",
-                "GameplayTags"
             }
         );
     }
