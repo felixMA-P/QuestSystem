@@ -15,7 +15,7 @@ class DIALOGPLUGINRUNTIME_API UDialogEndInfo : public UDialogInfoBase
 
 public:
 	UPROPERTY(EditAnywhere, Category = "DialogEnd")
-	FString Title;
+	FText Title = FText::GetEmpty();
 
 	UPROPERTY(EditAnywhere, Category = "DialogEnd")
 	TSubclassOf<UDialogEvent> EndEvent;
