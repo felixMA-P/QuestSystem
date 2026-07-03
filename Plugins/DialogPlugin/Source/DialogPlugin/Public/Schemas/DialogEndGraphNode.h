@@ -28,7 +28,7 @@ public:
 	virtual UDialogInfoBase* GetDialogInfoBase() const override { return DialogInfo; }
 	virtual UDialogEndInfo* GetDialogEndInfo() const { return DialogInfo; }
 
-	virtual void OnPropertiesChanged() override { Modify(); }
+	virtual void OnPropertiesChanged() override { }
 
 private:
 	UPROPERTY()
