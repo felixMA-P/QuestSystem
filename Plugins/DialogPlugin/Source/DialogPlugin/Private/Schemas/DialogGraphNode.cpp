@@ -4,6 +4,44 @@
 #include "Framework/Commands/UIAction.h"
 #include "ToolMenu.h"
 
+namespace
+{
+	// Word-wraps at the nearest space at/after MaxLineLength characters; MaxLineLength <= 0 disables wrapping.
+	FText WrapTextAtLength(const FText& InTextResume, const FText& InText, int32 MaxLineLength)
+	{
+		if (MaxLineLength <= 0)
+			return InText;
+
+		TArray<FString> Words;
+		InText.ToString().ParseIntoArrayWS(Words);
+		
+		FString Result;
+		FString CurrentLine;
+		
+		Result += InTextResume.ToString() + LINE_TERMINATOR;
+
+		for (const FString& Word : Words)
+		{
+			const FString Candidate = CurrentLine.IsEmpty() ? Word : CurrentLine + TEXT(" ") + Word;
+
+			if (Candidate.Len() > MaxLineLength && !CurrentLine.IsEmpty())
+			{
+				Result += CurrentLine + LINE_TERMINATOR;
+				CurrentLine = Word;
+			}
+			else
+			{
+				CurrentLine = Candidate;
+			}
+		}
+
+		if (!CurrentLine.IsEmpty())
+			Result += CurrentLine;
+
+		return FText::FromString(Result);
+	}
+}
+
 UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 {
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
@@ -182,5 +220,5 @@ FText UDialogGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 	if (DialogInfo->DialogText.IsEmpty())
 		return FText::FromString("Set up the dialog text");
 
-	return DialogInfo->DialogText;
+	return WrapTextAtLength(DialogInfo->DialogResume, DialogInfo->DialogText, DialogInfo->GraphPreviewWrapLength);
 }

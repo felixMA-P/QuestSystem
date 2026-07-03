@@ -33,7 +33,14 @@ public:
 	FGameplayTag Speaker;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DialogLine")
+	FText DialogResume;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DialogLine")
 	FText DialogText;
+
+	// Wraps the graph node title preview at this many characters; does not affect DialogText itself. 0 disables wrapping.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DialogLine", meta = (ClampMin = "0", UIMin = "0"))
+	int32 GraphPreviewWrapLength = 40;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DialogLine")
 	TArray<FDialogOutput> Outputs;

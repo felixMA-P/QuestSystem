@@ -45,9 +45,22 @@ void UDialogGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 	StartNode->NodePosX = 0;
 	StartNode->NodePosY = 0;
 
-	StartNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
+	UEdGraphPin* StartOutputPin = StartNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
 
 	Graph.AddNode(StartNode, true, true);
+
+	UDialogEndGraphNode* EndNode = NewObject<UDialogEndGraphNode>(&Graph);
+	EndNode->CreateNewGuid();
+	EndNode->NodePosX = 300;
+	EndNode->NodePosY = 0;
+	EndNode->InitNodeInfo(EndNode);
+
+	UEdGraphPin* EndInputPin = EndNode->CreateDefaultInputPin();
+
+	Graph.AddNode(EndNode, true, true);
+
+	TryCreateConnection(StartOutputPin, EndInputPin);
+
 	Graph.Modify();
 }
 

@@ -1,0 +1,5 @@
+For QuestSystemPlugin:
+A:\UE\Ins\UE_5.5\Engine\Build\BatchFiles\RunUAT.bat BuildPlugin -Plugin="A:\UE\Projects\QuestSystem\Plugins\QuestSystemPlugin\QuestSystemPlugin.uplugin -Package="A:\UE\Packaged\QuestSystemPlugin"
+
+For DialogPlugin:
+A:\UE\Ins\UE_5.5\Engine\Build\BatchFiles\RunUAT.bat BuildPlugin -Plugin="A:\UE\Projects\QuestSystem\Plugins\DialogPlugin\DialogPlugin.uplugin" -Package="A:\UE\Packaged\DialogPlugin

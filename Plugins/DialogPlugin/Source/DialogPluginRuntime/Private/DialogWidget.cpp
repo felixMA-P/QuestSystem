@@ -45,7 +45,7 @@ UDialogWorldSubsystem* UDialogWidget::GetDialogSubsystem() const
 
 void UDialogWidget::HandleLineChanged(UDialogLineInfo* LineInfo)
 {
-	if (Visibility == ESlateVisibility::Hidden)
+	if (GetVisibility() == ESlateVisibility::Hidden)
 	{
 		SetVisibility(ESlateVisibility::Visible);
 	}

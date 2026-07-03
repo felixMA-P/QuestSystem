@@ -201,6 +201,10 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 			IdToPinMap.Add(Pin->PinId, UiPin);
 		}
 
+		// Pin display labels (PinFriendlyName) aren't part of the saved runtime data;
+		// re-derive them from DialogInfo now that pins exist.
+		NewNode->OnPropertiesChanged();
+
 		WorkingGraph->AddNode(NewNode, true, true);
 	}
 

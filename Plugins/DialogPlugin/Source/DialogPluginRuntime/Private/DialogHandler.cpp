@@ -8,6 +8,18 @@
 
 void UDialogHandler::Initialize(const UDialog* InDialog)
 {
+	if (!InDialog)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Dialog System: UDialogHandler::Initialize called with null InDialog"));
+		return;
+	}
+
+	if (!InDialog->DialogGraph)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Dialog System: UDialogHandler::Initialize - Dialog '%s' its empty"), *InDialog->GetName());
+		return;
+	}
+
 	Dialog = const_cast<UDialog*>(InDialog);
 
 	UDialogRuntimeNode** StartNodePtr = Dialog->DialogGraph->Nodes.FindByPredicate([](const UDialogRuntimeNode* Node)
