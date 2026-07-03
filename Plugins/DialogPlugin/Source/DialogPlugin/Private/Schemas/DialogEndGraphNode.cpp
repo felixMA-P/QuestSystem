@@ -49,7 +49,8 @@ UDialogEndGraphNode::UDialogEndGraphNode()
 
 FText UDialogEndGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	check(DialogInfo);
+	if (!DialogInfo) return FText::FromString("End");
+
 	return FText::FromString(DialogInfo->Title);
 }
 

@@ -4,6 +4,7 @@
 #include "GraphEditor.h"
 #include "Editor/UnrealEd/Public/Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "Widgets/SNullWidget.h"
 
 FChainQuestAssetPrimaryTabFactory::FChainQuestAssetPrimaryTabFactory(TSharedPtr<FChainQuestAssetEditorApp> InApp)
 : FWorkflowTabFactory(InApp->PrimaryTabName, InApp)
@@ -17,6 +18,10 @@ FChainQuestAssetPrimaryTabFactory::FChainQuestAssetPrimaryTabFactory(TSharedPtr<
 TSharedRef<SWidget> FChainQuestAssetPrimaryTabFactory::CreateTabBody(const FWorkflowTabSpawnInfo& Info) const
 {
 	TSharedPtr<FChainQuestAssetEditorApp> LocalApp = App.Pin();
+	if (!LocalApp.IsValid())
+	{
+		return SNullWidget::NullWidget;
+	}
 
 	SGraphEditor::FGraphEditorEvents GraphEvents;
 	GraphEvents.OnSelectionChanged.BindRaw(LocalApp.Get(), &FChainQuestAssetEditorApp::OnGraphSelectionChanged);

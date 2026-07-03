@@ -77,8 +77,10 @@ void FDialogPluginModule::StartupModule()
 
 	StyleSet = MakeShareable(new FSlateStyleSet(TEXT("DialogSystemEditorStyle")));
 	TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin("DialogPlugin");
-	FString ContentDir = Plugin->GetContentDir();
-	StyleSet->SetContentRoot(ContentDir);
+	if (Plugin.IsValid())
+	{
+		StyleSet->SetContentRoot(Plugin->GetContentDir());
+	}
 
 	FSlateImageBrush* ThumbnailBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("DialogIcon"),          TEXT(".png")), FVector2D(120.f, 120.f));
 	FSlateImageBrush* IconBrush      = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("DialogIcon"),          TEXT(".png")), FVector2D(120.f, 120.f));

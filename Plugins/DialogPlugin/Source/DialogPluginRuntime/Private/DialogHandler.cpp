@@ -24,12 +24,23 @@ void UDialogHandler::Initialize(const UDialog* InDialog)
 
 	UDialogRuntimeNode** StartNodePtr = Dialog->DialogGraph->Nodes.FindByPredicate([](const UDialogRuntimeNode* Node)
 	{
-		return Node->DialogNodeType == EDialogNodeType::StartNode;
+		return Node && Node->DialogNodeType == EDialogNodeType::StartNode;
 	});
 
-	check(StartNodePtr);
+	if (!StartNodePtr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Dialog System: UDialogHandler::Initialize - Dialog '%s' has no StartNode"), *InDialog->GetName());
+		return;
+	}
 
 	UDialogRuntimeNode* StartNode = *StartNodePtr;
+
+	if (StartNode->OutputPins.IsEmpty() || !StartNode->OutputPins[0]->Connection || !StartNode->OutputPins[0]->Connection->Parent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Dialog System: UDialogHandler::Initialize - Dialog '%s' StartNode has no connected output"), *InDialog->GetName());
+		return;
+	}
+
 	CurrentNode = StartNode->OutputPins[0]->Connection->Parent;
 }
 
@@ -60,5 +71,7 @@ bool UDialogHandler::SelectResponse(int32 ResponseIndex, UWorld* World)
 
 UDialogLineInfo* UDialogHandler::GetCurrentDialogLine() const
 {
+	if (!CurrentNode) return nullptr;
+
 	return Cast<UDialogLineInfo>(CurrentNode->DialogInfo);
 }

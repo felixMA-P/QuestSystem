@@ -11,13 +11,23 @@ FChainQuestHandler::FChainQuestHandler(const UChainQuest* InChainQuest)
 {
 	ChainQuest = InChainQuest;
 
+	if (!ChainQuest->ChainQuestGraph)
+	{
+		UE_LOG(LogQuestSystem, Error, TEXT("Quest System: FChainQuestHandler - ChainQuest '%s' has no ChainQuestGraph"), *ChainQuest->Title.ToString());
+		return;
+	}
+
 	//We get the start node
 	UQuestRuntimeNode** StartNodePtr = ChainQuest->ChainQuestGraph->Nodes.FindByPredicate([](const UQuestRuntimeNode* Node)
 	{
-		return Node->QuestNodeType ==  EQuestNodeType::StartNode;
+		return Node && Node->QuestNodeType ==  EQuestNodeType::StartNode;
 	});
 
-	check(StartNodePtr);
+	if (!StartNodePtr)
+	{
+		UE_LOG(LogQuestSystem, Error, TEXT("Quest System: FChainQuestHandler - ChainQuest '%s' has no StartNode"), *ChainQuest->Title.ToString());
+		return;
+	}
 
 	UQuestRuntimeNode* StartNode = *StartNodePtr;
 
@@ -78,8 +88,14 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World, int Depth)
 	return false;
 }
 
-bool FChainQuestHandler::CheckCurrentEndDay(const int CurrentDay)
+bool FChainQuestHandler::CheckCurrentEndDay(const int CurrentDay, int Depth)
 {
+	if (Depth > 64)
+	{
+		UE_LOG(LogQuestSystem, Warning, TEXT("FChainQuestHandler: max recursion depth reached — possible cycle in quest graph"));
+		return false;
+	}
+
 	if (!CurrentNode) { return false; }
 
 	if (CurrentNode->QuestNodeType == EQuestNodeType::EndNode)
@@ -104,7 +120,7 @@ bool FChainQuestHandler::CheckCurrentEndDay(const int CurrentDay)
 
 		CurrentNode = CurrentNode->OutputPins[0]->Connection->Parent;
 		QuestsInfos.Add(CurrentNode->QuestInfo);
-		return CheckCurrentEndDay(CurrentDay);
+		return CheckCurrentEndDay(CurrentDay, Depth + 1);
 	}
 
 	return false;

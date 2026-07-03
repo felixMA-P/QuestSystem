@@ -47,6 +47,8 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	[this]()
 	{
+		if (!DialogInfo) return;
+
 		FDialogOutput NewOutput;
 		NewOutput.ResponseText = FText::FromString(TEXT("Response"));
 		DialogInfo->Outputs.Add(NewOutput);
@@ -79,7 +81,7 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 		if (PinToRemove && PinToRemove->Direction != EEdGraphPinDirection::EGPD_Input)
 		{
 			RemovePin(PinToRemove);
-			if (DialogInfo->Outputs.Num() > 0)
+			if (DialogInfo && DialogInfo->Outputs.Num() > 0)
 			{
 				DialogInfo->Outputs.RemoveAt(DialogInfo->Outputs.Num() - 1);
 			}
@@ -171,6 +173,8 @@ UEdGraphPin* UDialogGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, c
 
 void UDialogGraphNode::SyncPinsWithOutputs()
 {
+	if (!DialogInfo) return;
+
 	const int NumOutputsInData = DialogInfo->Outputs.Num();
 
 	TArray<UEdGraphPin*> OutputPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
@@ -215,7 +219,8 @@ void UDialogGraphNode::CreateDefaultOutputPins()
 
 FText UDialogGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	check(DialogInfo);
+	if (!DialogInfo)
+		return FText::FromString("Set up the dialog text");
 
 	if (DialogInfo->DialogText.IsEmpty())
 		return FText::FromString("Set up the dialog text");

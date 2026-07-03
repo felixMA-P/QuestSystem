@@ -56,7 +56,10 @@ void FDialogAssetEditorApp::InitEditor(const EToolkitMode::Type Mode, TSharedPtr
 void FDialogAssetEditorApp::OnClose()
 {
 	UpdateWorkingAssetFromGraph();
-	WorkingGraph->RemoveOnGraphChangedHandler(GraphChangeListenerHandle);
+	if (WorkingGraph)
+	{
+		WorkingGraph->RemoveOnGraphChangedHandler(GraphChangeListenerHandle);
+	}
 	FWorkflowCentricApplication::OnClose();
 }
 
@@ -139,6 +142,12 @@ void FDialogAssetEditorApp::UpdateWorkingAssetFromGraph()
 		}
 
 		UDialogGraphNodeBase* UIDialogNode = Cast<UDialogGraphNodeBase>(UiNode);
+		if (!UIDialogNode)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Dialog editor: skipping non-dialog node '%s' while saving"), *UiNode->GetName());
+			continue;
+		}
+
 		RuntimeNode->DialogNodeType = UIDialogNode->GetDialogNodeType();
 		RuntimeNode->DialogInfo     = DuplicateObject(UIDialogNode->GetDialogInfoBase(), RuntimeNode);
 
@@ -147,14 +156,18 @@ void FDialogAssetEditorApp::UpdateWorkingAssetFromGraph()
 
 	for (std::pair<FGuid, FGuid> Connection : Connections)
 	{
-		UDialogRuntimePin* Pin1 = IdToPinMap[Connection.first];
-		UDialogRuntimePin* Pin2 = IdToPinMap[Connection.second];
-		Pin1->Connection = Pin2;
+		UDialogRuntimePin** Pin1 = IdToPinMap.Find(Connection.first);
+		UDialogRuntimePin** Pin2 = IdToPinMap.Find(Connection.second);
+		if (!Pin1 || !Pin2) continue;
+
+		(*Pin1)->Connection = *Pin2;
 	}
 }
 
 void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 {
+	if (WorkingAsset == nullptr) return;
+
 	if (WorkingAsset->DialogGraph == nullptr)
 	{
 		WorkingGraph->GetSchema()->CreateDefaultNodesForGraph(*WorkingGraph);
@@ -172,7 +185,11 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		else if (RuntimeNode->DialogNodeType == EDialogNodeType::StartNode)  NewNode = NewObject<UDialogStartGraphNode>(WorkingGraph);
 		else if (RuntimeNode->DialogNodeType == EDialogNodeType::EndNode)    NewNode = NewObject<UDialogEndGraphNode>(WorkingGraph);
 
-		check(NewNode);
+		if (!NewNode)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Dialog editor: skipping node with unhandled DialogNodeType while loading '%s'"), *WorkingAsset->GetName());
+			continue;
+		}
 
 		NewNode->CreateNewGuid();
 		NewNode->NodePosX = RuntimeNode->Position.X;
@@ -210,10 +227,12 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 
 	for (std::pair<FGuid, FGuid> Connection : Connections)
 	{
-		UEdGraphPin* FromPin = IdToPinMap[Connection.first];
-		UEdGraphPin* ToPin   = IdToPinMap[Connection.second];
-		FromPin->LinkedTo.Add(ToPin);
-		ToPin->LinkedTo.Add(FromPin);
+		UEdGraphPin** FromPin = IdToPinMap.Find(Connection.first);
+		UEdGraphPin** ToPin   = IdToPinMap.Find(Connection.second);
+		if (!FromPin || !ToPin) continue;
+
+		(*FromPin)->LinkedTo.Add(*ToPin);
+		(*ToPin)->LinkedTo.Add(*FromPin);
 	}
 }
 

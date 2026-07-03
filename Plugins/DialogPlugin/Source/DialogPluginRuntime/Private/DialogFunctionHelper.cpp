@@ -3,5 +3,7 @@
 
 UDialogWorldSubsystem* UDialogFunctionHelper::GetDialogSystem(UWorld* WorldContext)
 {
+	if (!WorldContext) return nullptr;
+
 	return WorldContext->GetSubsystem<UDialogWorldSubsystem>();
 }

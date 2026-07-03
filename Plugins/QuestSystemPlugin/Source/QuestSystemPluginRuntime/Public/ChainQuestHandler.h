@@ -23,7 +23,7 @@ class FChainQuestHandler
 
 	//returns false if the chain quest continues
 	//returns true if the chain quest ends
-	bool CheckCurrentEndDay(int CurrentDay);
+	bool CheckCurrentEndDay(int CurrentDay, int Depth = 0);
 	
 public:
 

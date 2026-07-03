@@ -1,6 +1,7 @@
 #include "ChainQuestAssetPropertiesTabFactory.h"
 #include "ChainQuestAssetEditorApp.h"
 #include "ChainQuest.h"
+#include "Widgets/SNullWidget.h"
 
 FChainQuestAssetPropertiesTabFactory::FChainQuestAssetPropertiesTabFactory(TSharedPtr<FChainQuestAssetEditorApp> InApp)
 : FWorkflowTabFactory(InApp->PropertiesTabName, InApp)
@@ -15,6 +16,11 @@ TSharedRef<SWidget> FChainQuestAssetPropertiesTabFactory::CreateTabBody(const FW
 {
 	
 	TSharedPtr<FChainQuestAssetEditorApp> LocalApp = App.Pin();
+	if (!LocalApp.IsValid())
+	{
+		return SNullWidget::NullWidget;
+	}
+
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 
 	FDetailsViewArgs detailsViewArgs;

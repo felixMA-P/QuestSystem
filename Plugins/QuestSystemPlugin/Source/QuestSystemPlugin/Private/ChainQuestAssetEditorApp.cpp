@@ -58,7 +58,10 @@ void FChainQuestAssetEditorApp::InitEditor(const EToolkitMode::Type Mode, TShare
 void FChainQuestAssetEditorApp::OnClose()
 {
 	UpdateWorkingAssetFromGraph();
-	WorkingGraph->RemoveOnGraphChangedHandler(GraphChangeListenerHandle);
+	if (WorkingGraph)
+	{
+		WorkingGraph->RemoveOnGraphChangedHandler(GraphChangeListenerHandle);
+	}
 	FWorkflowCentricApplication::OnClose();
 }
 
@@ -145,23 +148,33 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 		}
 		
 		UQuestGraphNodeBase* UIQuestGraphNode = Cast<UQuestGraphNodeBase>(UiNode);
+		if (!UIQuestGraphNode)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ChainQuest editor: skipping non-quest node '%s' while saving"), *UiNode->GetName());
+			continue;
+		}
+
 		RuntimeNode->QuestNodeType = UIQuestGraphNode->GetQuestNodeType();
 		RuntimeNode->QuestInfo = DuplicateObject(UIQuestGraphNode->GetQuestInfoBase(), RuntimeNode);
-		
+
 		RuntimeGraph->Nodes.Add(RuntimeNode);
 	}
 
 	for (std::pair<FGuid, FGuid> Connection : Connections)
 	{
-		UQuestRuntimePin* pin1 = IdToPinMap[Connection.first];
-		UQuestRuntimePin* pin2 = IdToPinMap[Connection.second];
-		pin1->Connection = pin2;
+		UQuestRuntimePin** pin1 = IdToPinMap.Find(Connection.first);
+		UQuestRuntimePin** pin2 = IdToPinMap.Find(Connection.second);
+		if (!pin1 || !pin2) continue;
+
+		(*pin1)->Connection = *pin2;
 	}
-	
+
 }
 
 void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 {
+	if (WorkingAsset == nullptr) return;
+
 	if (WorkingAsset->ChainQuestGraph == nullptr)
 	{
 		WorkingGraph->GetSchema()->CreateDefaultNodesForGraph(*WorkingGraph);
@@ -182,8 +195,12 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		else if (RuntimeNode->QuestNodeType == EQuestNodeType::EndNode)
 			NewNode = NewObject<UQuestEndGraphNode>(WorkingGraph);
 
-		check(NewNode);
-		
+		if (!NewNode)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ChainQuest editor: skipping node with unhandled QuestNodeType while loading '%s'"), *WorkingAsset->GetName());
+			continue;
+		}
+
 		NewNode->CreateNewGuid();
 		NewNode->NodePosX = RuntimeNode->Position.X;
 		NewNode->NodePosY = RuntimeNode->Position.Y;
@@ -222,10 +239,12 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 	}
 
 	for (std::pair<FGuid, FGuid> Connection : Connections) {
-		UEdGraphPin* FromPin = IdToPinMap[Connection.first];
-		UEdGraphPin* ToPin = IdToPinMap[Connection.second];
-		FromPin->LinkedTo.Add(ToPin);
-		ToPin->LinkedTo.Add(FromPin);
+		UEdGraphPin** FromPin = IdToPinMap.Find(Connection.first);
+		UEdGraphPin** ToPin = IdToPinMap.Find(Connection.second);
+		if (!FromPin || !ToPin) continue;
+
+		(*FromPin)->LinkedTo.Add(*ToPin);
+		(*ToPin)->LinkedTo.Add(*FromPin);
 	}
 	
 	
