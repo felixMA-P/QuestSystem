@@ -32,6 +32,8 @@ void FDialogAssetEditorApp::InitEditor(const EToolkitMode::Type Mode, TSharedPtr
 		UEdGraph::StaticClass(),
 		UDialogGraphSchema::StaticClass()
 	);
+	
+	GEditor->RegisterForUndo(this);
 
 	CreateGraphEditorCommands();
 
@@ -306,12 +308,16 @@ void FDialogAssetEditorApp::PasteNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
 
+	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
+	
 	FString TextToImport;
 	FPlatformApplicationMisc::ClipboardPaste(TextToImport);
 
 	WorkingGraph->Modify();
+	
 	WorkingGraphUI->ClearSelectionSet();
 
+	
 	TSet<UEdGraphNode*> PastedNodes;
 	FEdGraphUtilities::ImportNodesFromText(WorkingGraph, TextToImport, PastedNodes);
 	
@@ -334,6 +340,7 @@ void FDialogAssetEditorApp::PasteNodes()
 	}
 
 	WorkingGraphUI->NotifyGraphChanged();
+	GEditor->EndTransaction();
 }
 
 bool FDialogAssetEditorApp::CanPasteNodes() const
@@ -347,6 +354,8 @@ bool FDialogAssetEditorApp::CanPasteNodes() const
 void FDialogAssetEditorApp::DeleteSelectedNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
+	
+	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
 
 	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
 	WorkingGraphUI->ClearSelectionSet();
@@ -360,11 +369,14 @@ void FDialogAssetEditorApp::DeleteSelectedNodes()
 			WorkingGraph->RemoveNode(Node);
 		}
 	}
+	
+	GEditor->EndTransaction();
 }
 
 bool FDialogAssetEditorApp::CanDeleteNodes() const
 {
 	if (!WorkingGraphUI) return false;
+	
 	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
 	for (UObject* Obj : SelectedNodes)
 	{
@@ -384,4 +396,24 @@ void FDialogAssetEditorApp::DuplicateNodes()
 bool FDialogAssetEditorApp::CanDuplicateNodes() const
 {
 	return CanCopyNodes();
+}
+
+bool FDialogAssetEditorApp::MatchesContext(const FTransactionContext& InContext,
+	const TArray<TPair<UObject*, FTransactionObjectEvent>>& TransactionObjectContexts) const
+{
+	return FEditorUndoClient::MatchesContext(InContext, TransactionObjectContexts);
+}
+
+void FDialogAssetEditorApp::PostUndo(bool bSuccess)
+{
+	WorkingGraph->Modify();
+	WorkingGraph->NotifyGraphChanged();
+	FEditorUndoClient::PostUndo(bSuccess);
+}
+
+void FDialogAssetEditorApp::PostRedo(bool bSuccess)
+{
+	WorkingGraph->Modify();
+	WorkingGraph->NotifyGraphChanged();
+	FEditorUndoClient::PostRedo(bSuccess);
 }

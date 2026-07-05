@@ -47,6 +47,16 @@ public:
 	bool CanDeleteNodes() const;
 	void DuplicateNodes();
 	bool CanDuplicateNodes() const;
+	
+	/*UNDO REDO*/
+	
+	virtual bool MatchesContext( const FTransactionContext& InContext, const TArray<TPair<UObject*, FTransactionObjectEvent>>& TransactionObjectContexts ) const  override;
+
+	virtual void PostUndo( bool bSuccess ) override;
+	
+	virtual void PostRedo( bool bSuccess ) override;
+	
+	/*UNDO REDO*/
 
 	FName PrimaryTabName   = FName(TEXT("DialogAssetPrimaryTab"));
 	FName PropertiesTabName = FName(TEXT("DialogAssetPropertiesTab"));

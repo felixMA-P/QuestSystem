@@ -27,6 +27,8 @@ void FChainQuestAssetEditorApp::InitEditor(const EToolkitMode::Type Mode, TShare
 
 	WorkingAsset = Cast<UChainQuest>(Object);
 
+	GEditor->RegisterForUndo(this);
+
 	CreateGraphEditorCommands();
 
 	WorkingGraph = FBlueprintEditorUtils::CreateNewGraph(
@@ -322,11 +324,15 @@ void FChainQuestAssetEditorApp::PasteNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
 
+	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
+
 	FString TextToImport;
 	FPlatformApplicationMisc::ClipboardPaste(TextToImport);
 
 	WorkingGraph->Modify();
+
 	WorkingGraphUI->ClearSelectionSet();
+
 
 	TSet<UEdGraphNode*> PastedNodes;
 	FEdGraphUtilities::ImportNodesFromText(WorkingGraph, TextToImport, PastedNodes);
@@ -352,6 +358,7 @@ void FChainQuestAssetEditorApp::PasteNodes()
 	}
 
 	WorkingGraphUI->NotifyGraphChanged();
+	GEditor->EndTransaction();
 }
 
 bool FChainQuestAssetEditorApp::CanPasteNodes() const
@@ -366,6 +373,8 @@ void FChainQuestAssetEditorApp::DeleteSelectedNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
 
+	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
+
 	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
 	WorkingGraphUI->ClearSelectionSet();
 
@@ -378,11 +387,14 @@ void FChainQuestAssetEditorApp::DeleteSelectedNodes()
 			WorkingGraph->RemoveNode(Node);
 		}
 	}
+
+	GEditor->EndTransaction();
 }
 
 bool FChainQuestAssetEditorApp::CanDeleteNodes() const
 {
 	if (!WorkingGraphUI) return false;
+
 	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
 	for (UObject* Obj : SelectedNodes)
 	{
@@ -402,4 +414,24 @@ void FChainQuestAssetEditorApp::DuplicateNodes()
 bool FChainQuestAssetEditorApp::CanDuplicateNodes() const
 {
 	return CanCopyNodes();
+}
+
+bool FChainQuestAssetEditorApp::MatchesContext(const FTransactionContext& InContext,
+	const TArray<TPair<UObject*, FTransactionObjectEvent>>& TransactionObjectContexts) const
+{
+	return FEditorUndoClient::MatchesContext(InContext, TransactionObjectContexts);
+}
+
+void FChainQuestAssetEditorApp::PostUndo(bool bSuccess)
+{
+	WorkingGraph->Modify();
+	WorkingGraph->NotifyGraphChanged();
+	FEditorUndoClient::PostUndo(bSuccess);
+}
+
+void FChainQuestAssetEditorApp::PostRedo(bool bSuccess)
+{
+	WorkingGraph->Modify();
+	WorkingGraph->NotifyGraphChanged();
+	FEditorUndoClient::PostRedo(bSuccess);
 }
