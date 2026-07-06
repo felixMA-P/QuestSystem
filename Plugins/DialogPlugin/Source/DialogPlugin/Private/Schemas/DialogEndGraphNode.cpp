@@ -20,7 +20,7 @@ UDialogEndGraphNode::UDialogEndGraphNode()
 		});
 
 		const int CurrentNumberOfInputs = InputPins.Num();
-		FString PinName = FString::Printf(TEXT("Input%d"), CurrentNumberOfInputs);
+		FString PinName = FString::Printf(TEXT("Input%d"), CurrentNumberOfInputs + 1);
 
 		CreateCustomPin(EGPD_Input, FName(PinName));
 

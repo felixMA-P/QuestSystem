@@ -4,6 +4,7 @@
 #include "ScopedTransaction.h"
 #include "Schemas/DialogEndGraphNode.h"
 #include "Schemas/DialogGraphNode.h"
+#include "Schemas/DialogKnotNode.h"
 #include "Schemas/DialogStartGraphNode.h"
 
 void UDialogGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
@@ -79,6 +80,42 @@ void UDialogGraphSchema::BreakPinLinks(UEdGraphPin& TargetPin, bool bSendsNodeNo
 {
 	const FScopedTransaction Transaction(FText::FromString("Break Pin Links"));
 	Super::BreakPinLinks(TargetPin, bSendsNodeNotifcation);
+}
+
+void UDialogGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const
+{
+	if (!PinA || !PinB) return;
+
+	UEdGraph* Graph = PinA->GetOwningNode()->GetGraph();
+	if (!Graph) return;
+
+	const FScopedTransaction Transaction(FText::FromString("Add Reroute Node"));
+	Graph->Modify();
+
+	UDialogKnotNode* Knot = NewObject<UDialogKnotNode>(Graph, UDialogKnotNode::StaticClass(), NAME_None, RF_Transactional);
+	Knot->CreateNewGuid();
+	Knot->NodePosX = GraphPosition.X - 21;
+	Knot->NodePosY = GraphPosition.Y - 12;
+	Knot->CreateKnotInputPin();
+	Knot->CreateKnotOutputPin();
+	Graph->AddNode(Knot, true, true);
+
+	UEdGraphPin* OutputSource = (PinA->Direction == EEdGraphPinDirection::EGPD_Output) ? PinA : PinB;
+	UEdGraphPin* InputDest    = (PinA->Direction == EEdGraphPinDirection::EGPD_Output) ? PinB : PinA;
+
+	OutputSource->BreakLinkTo(InputDest);
+	TryCreateConnection(OutputSource, Knot->GetInputPin());
+	TryCreateConnection(Knot->GetOutputPin(), InputDest);
+}
+
+FLinearColor UDialogGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
+{
+	if (PinType.PinSubCategory == TEXT("DialogKnotPin"))
+	{
+		return FLinearColor::White;
+	}
+
+	return Super::GetPinTypeColor(PinType);
 }
 
 bool UDialogGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const

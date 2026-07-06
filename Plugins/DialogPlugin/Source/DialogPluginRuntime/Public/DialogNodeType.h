@@ -8,5 +8,6 @@ enum class EDialogNodeType
 	StartNode,
 	DialogNode,
 	EndNode,
+	KnotNode,
 	Unknown
 };

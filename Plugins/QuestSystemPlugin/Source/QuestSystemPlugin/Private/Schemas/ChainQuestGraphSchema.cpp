@@ -5,6 +5,7 @@
 #include "ScopedTransaction.h"
 #include "Schemas/QuestEndGraphNode.h"
 #include "Schemas/QuestGraphNode.h"
+#include "Schemas/QuestKnotNode.h"
 #include "Schemas/QuestStartGraphNode.h"
 
 void UChainQuestGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
@@ -72,6 +73,42 @@ void UChainQuestGraphSchema::BreakPinLinks(UEdGraphPin& TargetPin, bool bSendsNo
 {
 	const FScopedTransaction Transaction(FText::FromString("Break Pin Links"));
 	Super::BreakPinLinks(TargetPin, bSendsNodeNotifcation);
+}
+
+void UChainQuestGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const
+{
+	if (!PinA || !PinB) return;
+
+	UEdGraph* Graph = PinA->GetOwningNode()->GetGraph();
+	if (!Graph) return;
+
+	const FScopedTransaction Transaction(FText::FromString("Add Reroute Node"));
+	Graph->Modify();
+
+	UQuestKnotNode* Knot = NewObject<UQuestKnotNode>(Graph, UQuestKnotNode::StaticClass(), NAME_None, RF_Transactional);
+	Knot->CreateNewGuid();
+	Knot->NodePosX = GraphPosition.X - 21;
+	Knot->NodePosY = GraphPosition.Y - 12;
+	Knot->CreateKnotInputPin();
+	Knot->CreateKnotOutputPin();
+	Graph->AddNode(Knot, true, true);
+
+	UEdGraphPin* OutputSource = (PinA->Direction == EEdGraphPinDirection::EGPD_Output) ? PinA : PinB;
+	UEdGraphPin* InputDest    = (PinA->Direction == EEdGraphPinDirection::EGPD_Output) ? PinB : PinA;
+
+	OutputSource->BreakLinkTo(InputDest);
+	TryCreateConnection(OutputSource, Knot->GetInputPin());
+	TryCreateConnection(Knot->GetOutputPin(), InputDest);
+}
+
+FLinearColor UChainQuestGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
+{
+	if (PinType.PinSubCategory == TEXT("QuestKnotPin"))
+	{
+		return FLinearColor::White;
+	}
+
+	return Super::GetPinTypeColor(PinType);
 }
 
 bool UChainQuestGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const

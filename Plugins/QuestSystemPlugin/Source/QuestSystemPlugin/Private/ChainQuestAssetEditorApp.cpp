@@ -5,6 +5,7 @@
 #include "Schemas/ChainQuestGraphSchema.h"
 #include "ChainQuestGraph.h"
 #include "Schemas/QuestGraphNode.h"
+#include "Schemas/QuestKnotNode.h"
 #include "QuestInfo.h"
 #include "Schemas/QuestStartGraphNode.h"
 #include "Schemas/QuestEndGraphNode.h"
@@ -114,47 +115,89 @@ void FChainQuestAssetEditorApp::OnGraphSelectionChanged(const FGraphPanelSelecti
 	}
 }
 
+namespace
+{
+	struct FPendingQuestConnection
+	{
+		FGuid FromPinId;
+		FGuid ToPinId;
+		TArray<FVector2D> ReroutePoints;
+	};
+
+	// Walks through any chain of non-compiler-relevant nodes (reroute/knot nodes) linked to Pin,
+	// collecting their positions, and returns the pin on the first real (compiler-relevant) node found.
+	UEdGraphPin* ResolveRealQuestPin(UEdGraphPin* Pin, TArray<FVector2D>& OutReroutePoints, TSet<UEdGraphNode*>& Visited)
+	{
+		if (!Pin->HasAnyConnections()) return nullptr;
+
+		UEdGraphPin* Next = Pin->LinkedTo[0];
+		UEdGraphNode* Owner = Next->GetOwningNode();
+
+		if (Owner && !Owner->IsCompilerRelevant())
+		{
+			if (Visited.Contains(Owner)) return nullptr;
+			Visited.Add(Owner);
+			OutReroutePoints.Add(FVector2D(Owner->NodePosX, Owner->NodePosY));
+
+			UEdGraphPin* PassThrough = Owner->GetPassThroughPin(Next);
+			return PassThrough ? ResolveRealQuestPin(PassThrough, OutReroutePoints, Visited) : nullptr;
+		}
+
+		return Next;
+	}
+}
+
 void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 {
 	if (WorkingAsset == nullptr || WorkingGraph == nullptr) return;
 
 	UChainQuestGraph* RuntimeGraph = NewObject<UChainQuestGraph>(WorkingAsset);
 	WorkingAsset->ChainQuestGraph = RuntimeGraph;
-	
-	TArray<std::pair<FGuid, FGuid>> Connections;
+
+	TArray<FPendingQuestConnection> Connections;
 	TMap<FGuid, UQuestRuntimePin*> IdToPinMap;
 
 	for (UEdGraphNode* UiNode : WorkingGraph->Nodes)
 	{
+		UQuestGraphNodeBase* UIQuestGraphNode = Cast<UQuestGraphNodeBase>(UiNode);
+		if (!UIQuestGraphNode)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ChainQuest editor: skipping non-quest node '%s' while saving"), *UiNode->GetName());
+			continue;
+		}
+
+		if (UIQuestGraphNode->GetQuestNodeType() == EQuestNodeType::KnotNode)
+		{
+			continue;
+		}
+
 		UQuestRuntimeNode* RuntimeNode = NewObject<UQuestRuntimeNode>(RuntimeGraph);
 		RuntimeNode->Position = FVector2D(UiNode->NodePosX, UiNode->NodePosY);
-		
+
 		for (UEdGraphPin* UiPin : UiNode->Pins)
 		{
 			UQuestRuntimePin* RuntimePin = NewObject<UQuestRuntimePin>(RuntimeNode);
 			RuntimePin->PinName = UiPin->PinName;
 			RuntimePin->PinId = UiPin->PinId;
 			RuntimePin->Parent = RuntimeNode;
-			
-			if (UiPin->HasAnyConnections() && UiPin->Direction == EEdGraphPinDirection::EGPD_Output) {
-				std::pair<FGuid, FGuid> Connection = std::make_pair(UiPin->PinId, UiPin->LinkedTo[0]->PinId);
-				Connections.Add(Connection);
+
+			if (UiPin->Direction == EEdGraphPinDirection::EGPD_Output)
+			{
+				TArray<FVector2D> ReroutePoints;
+				TSet<UEdGraphNode*> Visited;
+				if (UEdGraphPin* RealDest = ResolveRealQuestPin(UiPin, ReroutePoints, Visited))
+				{
+					Connections.Add({ UiPin->PinId, RealDest->PinId, MoveTemp(ReroutePoints) });
+				}
 			}
-			
+
 			IdToPinMap.Add(UiPin->PinId, RuntimePin);
-			
+
 			if (UiPin->Direction == EEdGraphPinDirection::EGPD_Input) {
 				RuntimeNode->InputPins.Add(RuntimePin);
 			} else {
 				RuntimeNode->OutputPins.Add(RuntimePin);
 			}
-		}
-		
-		UQuestGraphNodeBase* UIQuestGraphNode = Cast<UQuestGraphNodeBase>(UiNode);
-		if (!UIQuestGraphNode)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("ChainQuest editor: skipping non-quest node '%s' while saving"), *UiNode->GetName());
-			continue;
 		}
 
 		RuntimeNode->QuestNodeType = UIQuestGraphNode->GetQuestNodeType();
@@ -163,13 +206,14 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 		RuntimeGraph->Nodes.Add(RuntimeNode);
 	}
 
-	for (std::pair<FGuid, FGuid> Connection : Connections)
+	for (const FPendingQuestConnection& Connection : Connections)
 	{
-		UQuestRuntimePin** pin1 = IdToPinMap.Find(Connection.first);
-		UQuestRuntimePin** pin2 = IdToPinMap.Find(Connection.second);
+		UQuestRuntimePin** pin1 = IdToPinMap.Find(Connection.FromPinId);
+		UQuestRuntimePin** pin2 = IdToPinMap.Find(Connection.ToPinId);
 		if (!pin1 || !pin2) continue;
 
 		(*pin1)->Connection = *pin2;
+		(*pin1)->ReroutePoints = Connection.ReroutePoints;
 	}
 
 }
@@ -184,7 +228,7 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		return;
 	}
 
-	TArray<std::pair<FGuid, FGuid>> Connections;
+	TArray<FPendingQuestConnection> Connections;
 	TMap<FGuid, UEdGraphPin*> IdToPinMap;
 
 	for (UQuestRuntimeNode* RuntimeNode : WorkingAsset->ChainQuestGraph->Nodes)
@@ -232,7 +276,7 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 			UiPin->PinId = Pin->PinId;
 			
 			if (Pin->Connection != nullptr) {
-				Connections.Add(std::make_pair(Pin->PinId, Pin->Connection->PinId));
+				Connections.Add({ Pin->PinId, Pin->Connection->PinId, Pin->ReroutePoints });
 			}
 
 			IdToPinMap.Add(Pin->PinId, UiPin);
@@ -243,16 +287,32 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		
 	}
 
-	for (std::pair<FGuid, FGuid> Connection : Connections) {
-		UEdGraphPin** FromPin = IdToPinMap.Find(Connection.first);
-		UEdGraphPin** ToPin = IdToPinMap.Find(Connection.second);
+	for (const FPendingQuestConnection& Connection : Connections) {
+		UEdGraphPin** FromPin = IdToPinMap.Find(Connection.FromPinId);
+		UEdGraphPin** ToPin = IdToPinMap.Find(Connection.ToPinId);
 		if (!FromPin || !ToPin) continue;
 
-		(*FromPin)->LinkedTo.Add(*ToPin);
-		(*ToPin)->LinkedTo.Add(*FromPin);
+		UEdGraphPin* PrevPin = *FromPin;
+		for (const FVector2D& Point : Connection.ReroutePoints)
+		{
+			UQuestKnotNode* Knot = NewObject<UQuestKnotNode>(WorkingGraph, UQuestKnotNode::StaticClass(), NAME_None, RF_Transactional);
+			Knot->CreateNewGuid();
+			Knot->NodePosX = Point.X;
+			Knot->NodePosY = Point.Y;
+			Knot->CreateKnotInputPin();
+			Knot->CreateKnotOutputPin();
+			WorkingGraph->AddNode(Knot, true, true);
+
+			PrevPin->LinkedTo.Add(Knot->GetInputPin());
+			Knot->GetInputPin()->LinkedTo.Add(PrevPin);
+			PrevPin = Knot->GetOutputPin();
+		}
+
+		PrevPin->LinkedTo.Add(*ToPin);
+		(*ToPin)->LinkedTo.Add(PrevPin);
 	}
-	
-	
+
+
 }
 
 UQuestGraphNodeBase* FChainQuestAssetEditorApp::GetSelectedNode(const FGraphPanelSelectionSet& Selection)

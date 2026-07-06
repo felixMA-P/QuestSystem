@@ -7,6 +7,7 @@
 #include "Schemas/DialogGraphNodeBase.h"
 #include "Schemas/DialogGraphNode.h"
 #include "Schemas/DialogGraphSchema.h"
+#include "Schemas/DialogKnotNode.h"
 #include "Schemas/DialogStartGraphNode.h"
 #include "Schemas/DialogEndGraphNode.h"
 #include "DialogNodeType.h"
@@ -109,6 +110,38 @@ void FDialogAssetEditorApp::OnGraphSelectionChanged(const FGraphPanelSelectionSe
 	}
 }
 
+namespace
+{
+	struct FPendingDialogConnection
+	{
+		FGuid FromPinId;
+		FGuid ToPinId;
+		TArray<FVector2D> ReroutePoints;
+	};
+
+	// Walks through any chain of non-compiler-relevant nodes (reroute/knot nodes) linked to Pin,
+	// collecting their positions, and returns the pin on the first real (compiler-relevant) node found.
+	UEdGraphPin* ResolveRealDialogPin(UEdGraphPin* Pin, TArray<FVector2D>& OutReroutePoints, TSet<UEdGraphNode*>& Visited)
+	{
+		if (!Pin->HasAnyConnections()) return nullptr;
+
+		UEdGraphPin* Next = Pin->LinkedTo[0];
+		UEdGraphNode* Owner = Next->GetOwningNode();
+
+		if (Owner && !Owner->IsCompilerRelevant())
+		{
+			if (Visited.Contains(Owner)) return nullptr;
+			Visited.Add(Owner);
+			OutReroutePoints.Add(FVector2D(Owner->NodePosX, Owner->NodePosY));
+
+			UEdGraphPin* PassThrough = Owner->GetPassThroughPin(Next);
+			return PassThrough ? ResolveRealDialogPin(PassThrough, OutReroutePoints, Visited) : nullptr;
+		}
+
+		return Next;
+	}
+}
+
 void FDialogAssetEditorApp::UpdateWorkingAssetFromGraph()
 {
 	if (WorkingAsset == nullptr || WorkingGraph == nullptr) return;
@@ -116,11 +149,23 @@ void FDialogAssetEditorApp::UpdateWorkingAssetFromGraph()
 	UDialogGraph* RuntimeGraph = NewObject<UDialogGraph>(WorkingAsset);
 	WorkingAsset->DialogGraph = RuntimeGraph;
 
-	TArray<std::pair<FGuid, FGuid>> Connections;
+	TArray<FPendingDialogConnection> Connections;
 	TMap<FGuid, UDialogRuntimePin*> IdToPinMap;
 
 	for (UEdGraphNode* UiNode : WorkingGraph->Nodes)
 	{
+		UDialogGraphNodeBase* UIDialogNode = Cast<UDialogGraphNodeBase>(UiNode);
+		if (!UIDialogNode)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Dialog editor: skipping non-dialog node '%s' while saving"), *UiNode->GetName());
+			continue;
+		}
+
+		if (UIDialogNode->GetDialogNodeType() == EDialogNodeType::KnotNode)
+		{
+			continue;
+		}
+
 		UDialogRuntimeNode* RuntimeNode = NewObject<UDialogRuntimeNode>(RuntimeGraph);
 		RuntimeNode->Position = FVector2D(UiNode->NodePosX, UiNode->NodePosY);
 
@@ -131,9 +176,14 @@ void FDialogAssetEditorApp::UpdateWorkingAssetFromGraph()
 			RuntimePin->PinId   = UiPin->PinId;
 			RuntimePin->Parent  = RuntimeNode;
 
-			if (UiPin->HasAnyConnections() && UiPin->Direction == EEdGraphPinDirection::EGPD_Output)
+			if (UiPin->Direction == EEdGraphPinDirection::EGPD_Output)
 			{
-				Connections.Add(std::make_pair(UiPin->PinId, UiPin->LinkedTo[0]->PinId));
+				TArray<FVector2D> ReroutePoints;
+				TSet<UEdGraphNode*> Visited;
+				if (UEdGraphPin* RealDest = ResolveRealDialogPin(UiPin, ReroutePoints, Visited))
+				{
+					Connections.Add({ UiPin->PinId, RealDest->PinId, MoveTemp(ReroutePoints) });
+				}
 			}
 
 			IdToPinMap.Add(UiPin->PinId, RuntimePin);
@@ -144,26 +194,20 @@ void FDialogAssetEditorApp::UpdateWorkingAssetFromGraph()
 				RuntimeNode->OutputPins.Add(RuntimePin);
 		}
 
-		UDialogGraphNodeBase* UIDialogNode = Cast<UDialogGraphNodeBase>(UiNode);
-		if (!UIDialogNode)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Dialog editor: skipping non-dialog node '%s' while saving"), *UiNode->GetName());
-			continue;
-		}
-
 		RuntimeNode->DialogNodeType = UIDialogNode->GetDialogNodeType();
 		RuntimeNode->DialogInfo     = DuplicateObject(UIDialogNode->GetDialogInfoBase(), RuntimeNode);
 
 		RuntimeGraph->Nodes.Add(RuntimeNode);
 	}
 
-	for (std::pair<FGuid, FGuid> Connection : Connections)
+	for (const FPendingDialogConnection& Connection : Connections)
 	{
-		UDialogRuntimePin** Pin1 = IdToPinMap.Find(Connection.first);
-		UDialogRuntimePin** Pin2 = IdToPinMap.Find(Connection.second);
+		UDialogRuntimePin** Pin1 = IdToPinMap.Find(Connection.FromPinId);
+		UDialogRuntimePin** Pin2 = IdToPinMap.Find(Connection.ToPinId);
 		if (!Pin1 || !Pin2) continue;
 
 		(*Pin1)->Connection = *Pin2;
+		(*Pin1)->ReroutePoints = Connection.ReroutePoints;
 	}
 }
 
@@ -177,7 +221,7 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		return;
 	}
 
-	TArray<std::pair<FGuid, FGuid>> Connections;
+	TArray<FPendingDialogConnection> Connections;
 	TMap<FGuid, UEdGraphPin*> IdToPinMap;
 
 	for (UDialogRuntimeNode* RuntimeNode : WorkingAsset->DialogGraph->Nodes)
@@ -220,7 +264,7 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 			UiPin->PinId = Pin->PinId;
 
 			if (Pin->Connection != nullptr)
-				Connections.Add(std::make_pair(Pin->PinId, Pin->Connection->PinId));
+				Connections.Add({ Pin->PinId, Pin->Connection->PinId, Pin->ReroutePoints });
 
 			IdToPinMap.Add(Pin->PinId, UiPin);
 		}
@@ -232,14 +276,30 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		WorkingGraph->AddNode(NewNode, true, true);
 	}
 
-	for (std::pair<FGuid, FGuid> Connection : Connections)
+	for (const FPendingDialogConnection& Connection : Connections)
 	{
-		UEdGraphPin** FromPin = IdToPinMap.Find(Connection.first);
-		UEdGraphPin** ToPin   = IdToPinMap.Find(Connection.second);
+		UEdGraphPin** FromPin = IdToPinMap.Find(Connection.FromPinId);
+		UEdGraphPin** ToPin   = IdToPinMap.Find(Connection.ToPinId);
 		if (!FromPin || !ToPin) continue;
 
-		(*FromPin)->LinkedTo.Add(*ToPin);
-		(*ToPin)->LinkedTo.Add(*FromPin);
+		UEdGraphPin* PrevPin = *FromPin;
+		for (const FVector2D& Point : Connection.ReroutePoints)
+		{
+			UDialogKnotNode* Knot = NewObject<UDialogKnotNode>(WorkingGraph, UDialogKnotNode::StaticClass(), NAME_None, RF_Transactional);
+			Knot->CreateNewGuid();
+			Knot->NodePosX = Point.X;
+			Knot->NodePosY = Point.Y;
+			Knot->CreateKnotInputPin();
+			Knot->CreateKnotOutputPin();
+			WorkingGraph->AddNode(Knot, true, true);
+
+			PrevPin->LinkedTo.Add(Knot->GetInputPin());
+			Knot->GetInputPin()->LinkedTo.Add(PrevPin);
+			PrevPin = Knot->GetOutputPin();
+		}
+
+		PrevPin->LinkedTo.Add(*ToPin);
+		(*ToPin)->LinkedTo.Add(PrevPin);
 	}
 }
 

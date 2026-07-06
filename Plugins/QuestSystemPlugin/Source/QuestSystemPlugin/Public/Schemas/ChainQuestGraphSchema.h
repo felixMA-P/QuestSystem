@@ -43,5 +43,8 @@ public:
 
 	virtual void BreakPinLinks(UEdGraphPin& TargetPin, bool bSendsNodeNotifcation) const override;
 
+	virtual void OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const override;
+
+	virtual FLinearColor GetPinTypeColor(const FEdGraphPinType& PinType) const override;
 
 };

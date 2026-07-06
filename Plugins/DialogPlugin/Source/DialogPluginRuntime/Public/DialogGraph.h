@@ -18,6 +18,9 @@ public:
 	UPROPERTY() FGuid PinId;
 	UPROPERTY() UDialogRuntimePin* Connection = nullptr;
 	UPROPERTY() UDialogRuntimeNode* Parent = nullptr;
+
+	// Positions of any reroute (knot) nodes bent into the wire between this pin and Connection, editor-visual only.
+	UPROPERTY() TArray<FVector2D> ReroutePoints;
 };
 
 UCLASS(BlueprintType)

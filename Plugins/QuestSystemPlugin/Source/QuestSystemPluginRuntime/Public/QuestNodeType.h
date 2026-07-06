@@ -8,5 +8,6 @@ enum class EQuestNodeType
 	StartNode,
 	QuestNode,
 	EndNode,
+	KnotNode,
 	Unknown
 };
