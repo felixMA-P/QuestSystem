@@ -43,6 +43,17 @@ const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const U
 	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_AB, TEXT(""));
 }
 
+bool UChainQuestGraphSchema::IsConnectionRelinkingAllowed(UEdGraphPin* InPin) const
+{
+	return InPin != nullptr;
+}
+
+const FPinConnectionResponse UChainQuestGraphSchema::CanRelinkConnectionToPin(const UEdGraphPin* OldSourcePin,
+	const UEdGraphPin* TargetPinCandidate) const
+{
+	return CanCreateConnection(OldSourcePin, TargetPinCandidate);
+}
+
 void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 {
 	UQuestStartGraphNode* StartNode = NewObject<UQuestStartGraphNode>(&Graph, NAME_None, RF_Transactional);
@@ -55,6 +66,12 @@ void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 	Graph.AddNode(StartNode, true, true);
 	Graph.Modify();
 	
+}
+
+void UChainQuestGraphSchema::BreakPinLinks(UEdGraphPin& TargetPin, bool bSendsNodeNotifcation) const
+{
+	const FScopedTransaction Transaction(FText::FromString("Break Pin Links"));
+	Super::BreakPinLinks(TargetPin, bSendsNodeNotifcation);
 }
 
 bool UChainQuestGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const

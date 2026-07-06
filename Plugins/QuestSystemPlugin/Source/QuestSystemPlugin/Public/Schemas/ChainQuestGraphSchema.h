@@ -33,9 +33,15 @@ public:
 
 	virtual const FPinConnectionResponse CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const override;
 
+	virtual bool IsConnectionRelinkingAllowed(UEdGraphPin* InPin) const override;
+
+	virtual const FPinConnectionResponse CanRelinkConnectionToPin(const UEdGraphPin* OldSourcePin, const UEdGraphPin* TargetPinCandidate) const override;
+
 	virtual void CreateDefaultNodesForGraph(UEdGraph& Graph) const override;
 
 	virtual bool SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const override;
-	
-	
+
+	virtual void BreakPinLinks(UEdGraphPin& TargetPin, bool bSendsNodeNotifcation) const override;
+
+
 };

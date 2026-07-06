@@ -39,6 +39,16 @@ const FPinConnectionResponse UDialogGraphSchema::CanCreateConnection(const UEdGr
 	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_AB, TEXT(""));
 }
 
+bool UDialogGraphSchema::IsConnectionRelinkingAllowed(UEdGraphPin* InPin) const
+{
+	return InPin != nullptr;
+}
+
+const FPinConnectionResponse UDialogGraphSchema::CanRelinkConnectionToPin(const UEdGraphPin* OldSourcePin, const UEdGraphPin* TargetPinCandidate) const
+{
+	return CanCreateConnection(OldSourcePin, TargetPinCandidate);
+}
+
 void UDialogGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 {
 	UDialogStartGraphNode* StartNode = NewObject<UDialogStartGraphNode>(&Graph, NAME_None, RF_Transactional);
@@ -63,6 +73,12 @@ void UDialogGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 	TryCreateConnection(StartOutputPin, EndInputPin);
 
 	Graph.Modify();
+}
+
+void UDialogGraphSchema::BreakPinLinks(UEdGraphPin& TargetPin, bool bSendsNodeNotifcation) const
+{
+	const FScopedTransaction Transaction(FText::FromString("Break Pin Links"));
+	Super::BreakPinLinks(TargetPin, bSendsNodeNotifcation);
 }
 
 bool UDialogGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* Node) const
