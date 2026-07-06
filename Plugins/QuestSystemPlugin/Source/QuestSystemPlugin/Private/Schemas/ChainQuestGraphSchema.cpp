@@ -2,6 +2,7 @@
 
 #include "QuestInfo.h"
 #include "QuestSystemPlugin.h"
+#include "ScopedTransaction.h"
 #include "Schemas/QuestEndGraphNode.h"
 #include "Schemas/QuestGraphNode.h"
 #include "Schemas/QuestStartGraphNode.h"
@@ -44,7 +45,7 @@ const FPinConnectionResponse UChainQuestGraphSchema::CanCreateConnection(const U
 
 void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 {
-	UQuestStartGraphNode* StartNode = NewObject<UQuestStartGraphNode>(&Graph);
+	UQuestStartGraphNode* StartNode = NewObject<UQuestStartGraphNode>(&Graph, NAME_None, RF_Transactional);
 	StartNode->CreateNewGuid();
 	StartNode->NodePosX = 0;
 	StartNode->NodePosY = 0;
@@ -73,7 +74,9 @@ bool UChainQuestGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNo
 UEdGraphNode* FNewNodeAction::PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location,
                                             bool bSelectNewNode)
 {
-	UQuestGraphNodeBase* NewNode = NewObject<UQuestGraphNodeBase>(ParentGraph, ClassTemplate);
+	const FScopedTransaction Transaction(FText::FromString("Add Quest Node"));
+
+	UQuestGraphNodeBase* NewNode = NewObject<UQuestGraphNodeBase>(ParentGraph, ClassTemplate, NAME_None, RF_Transactional);
 	NewNode->CreateNewGuid();
 	NewNode->NodePosX = Location.X;
 	NewNode->NodePosY = Location.Y;

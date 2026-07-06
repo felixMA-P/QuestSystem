@@ -1,6 +1,7 @@
 #include "Schemas/DialogGraphSchema.h"
 
 #include "DialogPlugin.h"
+#include "ScopedTransaction.h"
 #include "Schemas/DialogEndGraphNode.h"
 #include "Schemas/DialogGraphNode.h"
 #include "Schemas/DialogStartGraphNode.h"
@@ -40,7 +41,7 @@ const FPinConnectionResponse UDialogGraphSchema::CanCreateConnection(const UEdGr
 
 void UDialogGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 {
-	UDialogStartGraphNode* StartNode = NewObject<UDialogStartGraphNode>(&Graph);
+	UDialogStartGraphNode* StartNode = NewObject<UDialogStartGraphNode>(&Graph, NAME_None, RF_Transactional);
 	StartNode->CreateNewGuid();
 	StartNode->NodePosX = 0;
 	StartNode->NodePosY = 0;
@@ -49,7 +50,7 @@ void UDialogGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 
 	Graph.AddNode(StartNode, true, true);
 
-	UDialogEndGraphNode* EndNode = NewObject<UDialogEndGraphNode>(&Graph);
+	UDialogEndGraphNode* EndNode = NewObject<UDialogEndGraphNode>(&Graph, NAME_None, RF_Transactional);
 	EndNode->CreateNewGuid();
 	EndNode->NodePosX = 300;
 	EndNode->NodePosY = 0;
@@ -76,7 +77,9 @@ bool UDialogGraphSchema::SafeDeleteNodeFromGraph(UEdGraph* Graph, UEdGraphNode* 
 
 UEdGraphNode* FNewDialogNodeAction::PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode)
 {
-	UDialogGraphNodeBase* NewNode = NewObject<UDialogGraphNodeBase>(ParentGraph, ClassTemplate);
+	const FScopedTransaction Transaction(FText::FromString("Add Dialog Node"));
+
+	UDialogGraphNodeBase* NewNode = NewObject<UDialogGraphNodeBase>(ParentGraph, ClassTemplate, NAME_None, RF_Transactional);
 	NewNode->CreateNewGuid();
 	NewNode->NodePosX = Location.X;
 	NewNode->NodePosY = Location.Y;

@@ -13,6 +13,7 @@
 #include "EdGraphUtilities.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "HAL/PlatformApplicationMisc.h"
+#include "ScopedTransaction.h"
 
 void FDialogAssetEditorApp::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
 {
@@ -183,9 +184,9 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 	{
 		UDialogGraphNodeBase* NewNode = nullptr;
 
-		if      (RuntimeNode->DialogNodeType == EDialogNodeType::DialogNode) NewNode = NewObject<UDialogGraphNode>(WorkingGraph);
-		else if (RuntimeNode->DialogNodeType == EDialogNodeType::StartNode)  NewNode = NewObject<UDialogStartGraphNode>(WorkingGraph);
-		else if (RuntimeNode->DialogNodeType == EDialogNodeType::EndNode)    NewNode = NewObject<UDialogEndGraphNode>(WorkingGraph);
+		if      (RuntimeNode->DialogNodeType == EDialogNodeType::DialogNode) NewNode = NewObject<UDialogGraphNode>(WorkingGraph, NAME_None, RF_Transactional);
+		else if (RuntimeNode->DialogNodeType == EDialogNodeType::StartNode)  NewNode = NewObject<UDialogStartGraphNode>(WorkingGraph, NAME_None, RF_Transactional);
+		else if (RuntimeNode->DialogNodeType == EDialogNodeType::EndNode)    NewNode = NewObject<UDialogEndGraphNode>(WorkingGraph, NAME_None, RF_Transactional);
 
 		if (!NewNode)
 		{
@@ -198,7 +199,11 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		NewNode->NodePosY = RuntimeNode->Position.Y;
 
 		if (RuntimeNode->DialogInfo != nullptr)
-			NewNode->SetDialogInfo(DuplicateObject(RuntimeNode->DialogInfo, RuntimeNode));
+		{
+			UDialogInfoBase* DuplicatedInfo = DuplicateObject(RuntimeNode->DialogInfo, RuntimeNode);
+			DuplicatedInfo->SetFlags(RF_Transactional);
+			NewNode->SetDialogInfo(DuplicatedInfo);
+		}
 		else
 			NewNode->InitNodeInfo(NewNode);
 
@@ -308,8 +313,8 @@ void FDialogAssetEditorApp::PasteNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
 
-	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
-	
+	const FScopedTransaction Transaction(FText::FromString("Paste Dialog Nodes"));
+
 	FString TextToImport;
 	FPlatformApplicationMisc::ClipboardPaste(TextToImport);
 
@@ -340,7 +345,6 @@ void FDialogAssetEditorApp::PasteNodes()
 	}
 
 	WorkingGraphUI->NotifyGraphChanged();
-	GEditor->EndTransaction();
 }
 
 bool FDialogAssetEditorApp::CanPasteNodes() const
@@ -354,8 +358,8 @@ bool FDialogAssetEditorApp::CanPasteNodes() const
 void FDialogAssetEditorApp::DeleteSelectedNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
-	
-	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
+
+	const FScopedTransaction Transaction(FText::FromString("Delete Dialog Nodes"));
 
 	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
 	WorkingGraphUI->ClearSelectionSet();
@@ -369,8 +373,6 @@ void FDialogAssetEditorApp::DeleteSelectedNodes()
 			WorkingGraph->RemoveNode(Node);
 		}
 	}
-	
-	GEditor->EndTransaction();
 }
 
 bool FDialogAssetEditorApp::CanDeleteNodes() const

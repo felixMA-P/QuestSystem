@@ -23,7 +23,7 @@ public:
 
 	virtual EDialogNodeType GetDialogNodeType() const override { return EDialogNodeType::EndNode; }
 
-	virtual void InitNodeInfo(UObject* Outer) override { DialogInfo = NewObject<UDialogEndInfo>(Outer); }
+	virtual void InitNodeInfo(UObject* Outer) override { DialogInfo = NewObject<UDialogEndInfo>(Outer, NAME_None, RF_Transactional); }
 	virtual void SetDialogInfo(UDialogInfoBase* Info) override { DialogInfo = Cast<UDialogEndInfo>(Info); }
 	virtual UDialogInfoBase* GetDialogInfoBase() const override { return DialogInfo; }
 	virtual UDialogEndInfo* GetDialogEndInfo() const { return DialogInfo; }

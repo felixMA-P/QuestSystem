@@ -28,7 +28,7 @@ public:
 	virtual UEdGraphPin* CreateDefaultInputPin() override;
 	virtual void CreateDefaultOutputPins() override;
 
-	virtual void InitNodeInfo(UObject* Outer) override { DialogInfo = NewObject<UDialogLineInfo>(Outer); }
+	virtual void InitNodeInfo(UObject* Outer) override { DialogInfo = NewObject<UDialogLineInfo>(Outer, NAME_None, RF_Transactional); }
 	virtual void SetDialogInfo(UDialogInfoBase* Info) override { DialogInfo = Cast<UDialogLineInfo>(Info); }
 	virtual UDialogInfoBase* GetDialogInfoBase() const override { return DialogInfo; }
 	virtual UDialogLineInfo* GetDialogLineInfo() const { return DialogInfo; }

@@ -26,7 +26,7 @@ public: // UDialogGraphNodeBase interface
 
 	virtual UEdGraphPin* CreateDefaultInputPin() override;
 
-	virtual void InitNodeInfo(UObject* Output) override { QuestInfo = NewObject<UEndQuestInfo>(Output); }
+	virtual void InitNodeInfo(UObject* Output) override { QuestInfo = NewObject<UEndQuestInfo>(Output, NAME_None, RF_Transactional); }
 	virtual void SetQuestInfo(UQuestInfoBase* Info) override { QuestInfo = Cast<UEndQuestInfo>(Info); }
 	virtual UQuestInfoBase* GetQuestInfoBase () const override { return QuestInfo; }
 	virtual UEndQuestInfo* GetEndQuestInfo () const { return QuestInfo; }

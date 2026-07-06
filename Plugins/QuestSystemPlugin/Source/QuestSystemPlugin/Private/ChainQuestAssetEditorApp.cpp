@@ -12,6 +12,7 @@
 #include "EdGraphUtilities.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "HAL/PlatformApplicationMisc.h"
+#include "ScopedTransaction.h"
 
 void FChainQuestAssetEditorApp::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
 {
@@ -191,11 +192,11 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 
 		UQuestGraphNodeBase* NewNode = nullptr;
 		if (RuntimeNode->QuestNodeType == EQuestNodeType::QuestNode)
-			NewNode = NewObject<UQuestGraphNode>(WorkingGraph);
+			NewNode = NewObject<UQuestGraphNode>(WorkingGraph, NAME_None, RF_Transactional);
 		else if (RuntimeNode->QuestNodeType == EQuestNodeType::StartNode)
-			NewNode = NewObject<UQuestStartGraphNode>(WorkingGraph);
+			NewNode = NewObject<UQuestStartGraphNode>(WorkingGraph, NAME_None, RF_Transactional);
 		else if (RuntimeNode->QuestNodeType == EQuestNodeType::EndNode)
-			NewNode = NewObject<UQuestEndGraphNode>(WorkingGraph);
+			NewNode = NewObject<UQuestEndGraphNode>(WorkingGraph, NAME_None, RF_Transactional);
 
 		if (!NewNode)
 		{
@@ -209,7 +210,9 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 
 		if (RuntimeNode->QuestInfo != nullptr)
 		{
-			NewNode->SetQuestInfo(DuplicateObject(RuntimeNode->QuestInfo, RuntimeNode));
+			UQuestInfoBase* DuplicatedInfo = DuplicateObject(RuntimeNode->QuestInfo, RuntimeNode);
+			DuplicatedInfo->SetFlags(RF_Transactional);
+			NewNode->SetQuestInfo(DuplicatedInfo);
 		}
 		else
 		{
@@ -324,7 +327,7 @@ void FChainQuestAssetEditorApp::PasteNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
 
-	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
+	const FScopedTransaction Transaction(FText::FromString("Paste Quest Nodes"));
 
 	FString TextToImport;
 	FPlatformApplicationMisc::ClipboardPaste(TextToImport);
@@ -358,7 +361,6 @@ void FChainQuestAssetEditorApp::PasteNodes()
 	}
 
 	WorkingGraphUI->NotifyGraphChanged();
-	GEditor->EndTransaction();
 }
 
 bool FChainQuestAssetEditorApp::CanPasteNodes() const
@@ -373,7 +375,7 @@ void FChainQuestAssetEditorApp::DeleteSelectedNodes()
 {
 	if (!WorkingGraphUI || !WorkingGraph) return;
 
-	GEditor->BeginTransaction(TEXT("Delete Transaction"), FText::FromString("Delete Transaction"), WorkingGraph);
+	const FScopedTransaction Transaction(FText::FromString("Delete Quest Nodes"));
 
 	const FGraphPanelSelectionSet SelectedNodes = WorkingGraphUI->GetSelectedNodes();
 	WorkingGraphUI->ClearSelectionSet();
@@ -387,8 +389,6 @@ void FChainQuestAssetEditorApp::DeleteSelectedNodes()
 			WorkingGraph->RemoveNode(Node);
 		}
 	}
-
-	GEditor->EndTransaction();
 }
 
 bool FChainQuestAssetEditorApp::CanDeleteNodes() const

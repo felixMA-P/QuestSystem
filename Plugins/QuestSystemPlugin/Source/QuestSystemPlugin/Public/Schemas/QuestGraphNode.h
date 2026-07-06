@@ -31,7 +31,7 @@ public: //Our interface
 	virtual UEdGraphPin* CreateDefaultInputPin() override;
 	virtual void CreateDefaultOutPutPins() override;
 
-	virtual void InitNodeInfo(UObject* Output) override { QuestInfo = NewObject<UQuestInfo>(Output); }
+	virtual void InitNodeInfo(UObject* Output) override { QuestInfo = NewObject<UQuestInfo>(Output, NAME_None, RF_Transactional); }
 	virtual void SetQuestInfo(UQuestInfoBase* Info) override { QuestInfo = Cast<UQuestInfo>(Info); }
 	virtual UQuestInfoBase* GetQuestInfoBase () const override { return QuestInfo; }
 	virtual UQuestInfo* GetQuestInfo () const { return QuestInfo; }
