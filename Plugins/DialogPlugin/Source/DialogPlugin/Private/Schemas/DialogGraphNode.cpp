@@ -65,10 +65,7 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 			return Pin->Direction == EGPD_Input;
 		});
 
-		const int CurrentNumberOfInputs = InputPins.Num() + 1;
-		FString PinName = FString::Printf(TEXT("Input%d"), CurrentNumberOfInputs);
-
-		CreateCustomPin(EGPD_Input, FName(PinName));
+		CreateCustomPin(EGPD_Input, FName(TEXT("Input")));
 
 		GetGraph()->NotifyGraphChanged();
 		GetGraph()->Modify();
