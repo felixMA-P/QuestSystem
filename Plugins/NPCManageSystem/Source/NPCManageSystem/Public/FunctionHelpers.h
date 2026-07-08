@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EntitiesSubsystem.h"
 #include "NpcManagerSubsystem.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "FunctionHelpers.generated.h"
@@ -23,11 +22,5 @@ public:
 	{
 		return WorldContext->GetSubsystem<UNpcManagerSubsystem>();
 	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="CustomSubsystemsAccess")
-	static UEntitiesSubsystem* GetEntitiesManager(UWorld* WorldContext)
-	{
-		return WorldContext->GetSubsystem<UEntitiesSubsystem>();
-	}
-
+	
 };

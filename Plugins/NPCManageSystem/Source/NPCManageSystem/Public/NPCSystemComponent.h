@@ -16,7 +16,7 @@ class NPCMANAGESYSTEM_API UNPCSystemComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UNPCSystemComponent();
-	
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "NPC System", meta = (AllowPrivateAccess=true))
 	FGameplayTag Tag;
 };

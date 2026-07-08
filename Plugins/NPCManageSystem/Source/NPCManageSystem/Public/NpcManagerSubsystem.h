@@ -3,6 +3,8 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "NPCInfoRow.h"
+#include "Engine/DataTable.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "NpcManagerSubsystem.generated.h"
 
@@ -20,7 +22,9 @@ class NPCMANAGESYSTEM_API UNpcManagerSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-	
+
+	UNpcManagerSubsystem();
+
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
 	void AddNPC(AActor* NPC);
 
@@ -33,10 +37,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
 	void MoveNPC(const FGameplayTag NameTag, const FVector& Location);
 
+	// Looks up NPCDataTable using the tag as row name. Returns false if not found.
+	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
+	bool GetNPCInfo(const FGameplayTag& Tag, FNPCInfoRow& OutInfo);
+
 private:
+
+	// DataTable with FNPCInfoRow rows; row name must match the NPC's GameplayTag (e.g. "NPC.Blacksmith")
+	UPROPERTY()
+	TObjectPtr<UDataTable> NPCDataTable;
 
 	UPROPERTY()
 	TMap<FGameplayTag, AActor*> TagNPCsMap;
+
 	FDelegateHandle OnActorsInitializedDelegate;
 
 protected:

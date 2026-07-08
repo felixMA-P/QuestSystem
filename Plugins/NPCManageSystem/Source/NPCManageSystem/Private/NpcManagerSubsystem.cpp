@@ -3,9 +3,22 @@
 
 #include "NpcManagerSubsystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "NPCInfoRow.h"
 #include "NPCSystemComponent.h"
 #include "Misc/LowLevelTestAdapter.h"
- 
+#include "UObject/ConstructorHelpers.h"
+
+
+UNpcManagerSubsystem::UNpcManagerSubsystem()
+{
+	// Real, designer-populated DataTable asset; create it in the editor at this path
+	// (Right-click > Miscellaneous > Data Table > Row Struct: NPCInfoRow) if it doesn't exist yet.
+	static ConstructorHelpers::FObjectFinder<UDataTable> NPCDataTableFinder(TEXT("/NPCManageSystem/Data/DT_NPCInfo.DT_NPCInfo"));
+	if (NPCDataTableFinder.Succeeded())
+	{
+		NPCDataTable = NPCDataTableFinder.Object;
+	}
+}
 
 void UNpcManagerSubsystem::AddNPC(AActor* NPC)
 {
@@ -44,6 +57,34 @@ AActor* UNpcManagerSubsystem::GetNPC(const FGameplayTag NameTag)
 	}
 	
 	return *NpcPtr;
+}
+
+bool UNpcManagerSubsystem::GetNPCInfo(const FGameplayTag& Tag, FNPCInfoRow& OutInfo)
+{
+	if (!NPCDataTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetNPCInfo: NPCDataTable is not set on the NPC Manager Subsystem"));
+		return false;
+	}
+
+	const FNPCInfoRow* FoundRow = nullptr;
+	NPCDataTable->ForeachRow<FNPCInfoRow>(TEXT("GetNPCInfo"), [&Tag, &FoundRow](const FName& RowName, const FNPCInfoRow& Row)
+	{
+		if (!FoundRow && Row.Tag == Tag)
+		{
+			FoundRow = &Row;
+		}
+	});
+
+	if (!FoundRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetNPCInfo: No row found for tag '%s' in DataTable '%s'"),
+			*Tag.GetTagName().ToString(), *NPCDataTable->GetName());
+		return false;
+	}
+
+	OutInfo = *FoundRow;
+	return true;
 }
 
 void UNpcManagerSubsystem::MoveNPC(const FGameplayTag NameTag, const FVector& Location)
