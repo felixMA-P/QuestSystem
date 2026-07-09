@@ -9,7 +9,7 @@
 #include "ChainQuestHandler.h"
 #include "DataAssetChainQuests.h"
 #include "EndQuestInfo.h"
-#include "EndQuestResult.h"
+#include "QuestEvent.h"
 #include "QuestInfo.h"
 #include "QuestSystemPluginRuntime.h"
 #include "QuestTagsManager.h"
@@ -76,9 +76,9 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 				AddChainQuest(EndQuestInfo->NextChainQuest);
 			}
 
-			if (EndQuestInfo->EndResult != nullptr)
+			if (EndQuestInfo->EndEvent != nullptr)
 			{
-				EndQuestInfo->EndResult.GetDefaultObject()->ExecuteResult(GetWorld());
+				EndQuestInfo->EndEvent.GetDefaultObject()->Execute(GetWorld());
 			}
 
 			UE_LOG(LogQuestSystem, Log, TEXT("ChainQuest '%s' completed"), *OnGoingChainQuest->GetChainQuest()->Title.ToString());

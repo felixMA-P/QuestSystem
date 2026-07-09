@@ -2,6 +2,7 @@
 
 #include "ChainQuestGraph.h"
 #include "EndQuestInfo.h"
+#include "QuestEvent.h"
 #include "QuestInfo.h"
 #include "QuestSystemPluginRuntime.h"
 #include "QuestTagsManager.h"
@@ -53,19 +54,22 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World, int Depth)
 	UQuestInfo* Info = Cast<UQuestInfo>(CurrentNode->QuestInfo);
 	if (!Info) { return false; }
 
-	TArray<TSubclassOf<UCondition>> Conditions;
-	Info->OutPuts.GetKeys(Conditions);
 	int Index = 0;
 
-	for (const TSubclassOf<UCondition>& Condition : Conditions)
+	for (const FQuestOutput& Output : Info->OutPuts)
 	{
-		if (!Condition) { Index++; continue; }
+		if (!Output.Condition) { Index++; continue; }
 
-		if (Condition.GetDefaultObject()->CheckCondition(World))
+		if (Output.Condition.GetDefaultObject()->CheckCondition(World))
 		{
 			if (!CurrentNode->OutputPins.IsValidIndex(Index) || !CurrentNode->OutputPins[Index]->Connection || !CurrentNode->OutputPins[Index]->Connection->Parent)
 			{
 				return false;
+			}
+
+			if (Output.Event)
+			{
+				Output.Event.GetDefaultObject()->Execute(World);
 			}
 
 			CurrentNode = CurrentNode->OutputPins[Index]->Connection->Parent;

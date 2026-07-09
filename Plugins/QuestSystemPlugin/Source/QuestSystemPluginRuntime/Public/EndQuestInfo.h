@@ -8,7 +8,7 @@
 #include "QuestInfoBase.h"
 #include "EndQuestInfo.generated.h"
 
-class UEndQuestResult;
+class UQuestEvent;
 class UChainQuest;
 
 UCLASS(BlueprintType)
@@ -21,7 +21,7 @@ public:
 	FText Title = FText::GetEmpty();
 
 	UPROPERTY(EditAnywhere, Category = "EndQuest")
-	TSubclassOf<UEndQuestResult> EndResult;
+	TSubclassOf<UQuestEvent> EndEvent;
 
 	UPROPERTY(EditAnywhere, Category = "EndQuest")
 	UChainQuest* NextChainQuest = nullptr;

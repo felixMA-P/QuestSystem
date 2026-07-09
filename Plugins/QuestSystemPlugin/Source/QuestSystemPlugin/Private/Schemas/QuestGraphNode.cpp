@@ -10,7 +10,10 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
-	 	QuestInfo->OutPuts.Add(UCondition::StaticClass(), FText::FromString("Output"));
+	 	FQuestOutput NewOutput;
+	 	NewOutput.Condition = UCondition::StaticClass();
+	 	NewOutput.Text = FText::FromString("Output");
+	 	QuestInfo->OutPuts.Add(NewOutput);
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
 	 	GetGraph()->Modify();
@@ -25,10 +28,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 			 return Pin->Direction == EGPD_Input;
 		 });
 
-	 	const int CurrentNumberOfInputs = InputPins.Num() + 1;
 	 	FString CurrentInputName = TEXT("Input");
-	 	FString NumberS = FString::FromInt(CurrentNumberOfInputs);
-	 	CurrentInputName = CurrentInputName.Append(NumberS);
 	 	
 		CreateCustomPin(
 			 EGPD_Input, 
@@ -44,9 +44,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 {
 	 	if (!QuestInfo || QuestInfo->OutPuts.IsEmpty()) return;
 
-	 	TArray<TSubclassOf<UCondition>> OutKeys;
-	 	QuestInfo->OutPuts.GetKeys(OutKeys);
-	 	QuestInfo->OutPuts.Remove(OutKeys.Last());
+	 	QuestInfo->OutPuts.Pop();
 
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
@@ -139,15 +137,12 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	if (!QuestInfo) return;
 
 	int NumOfOutputPins = QuestInfo->OutPuts.Num();
-	
-	TArray<TSubclassOf<UCondition>> OutKeys;
-	QuestInfo->OutPuts.GetKeys(OutKeys);
 
 	TArray<UEdGraphPin*> OutPutPins = GetAllPins().FilterByPredicate([](UEdGraphPin * Pin)
 	 {
 		 return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
 	 });
-	
+
 	int NumGraphNodePins = OutPutPins.Num();
 
 	while (NumGraphNodePins > NumOfOutputPins)
@@ -157,7 +152,7 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	}
 	while (NumOfOutputPins > NumGraphNodePins)
 	{
-		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName( QuestInfo->OutPuts[OutKeys[NumGraphNodePins]].ToString()));
+		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(QuestInfo->OutPuts[NumGraphNodePins].Text.ToString()));
 		NumGraphNodePins++;
 	}
 
@@ -167,13 +162,13 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	 });
 
 	int Index = 0;
-	
+
 	for (auto OutPutPin : OutPutPins)
 	{
-		OutPutPin->PinName = FName(QuestInfo->OutPuts[OutKeys[Index]].ToString());
+		OutPutPin->PinName = FName(QuestInfo->OutPuts[Index].Text.ToString());
 		Index++;
 	}
-	
+
 }
 
 UEdGraphPin* UQuestGraphNode::CreateDefaultInputPin()
