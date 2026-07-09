@@ -30,6 +30,21 @@ void UNpcManagerSubsystem::AddNPC(AActor* NPC)
 	{
 		if (Comp->Tag.IsValid())
 		{
+			const FGameplayTag& Tag = Comp->Tag;
+			const FNPCInfoRow* FoundRow = nullptr;
+			NPCDataTable->ForeachRow<FNPCInfoRow>(TEXT("GetNPCInfo"), [&Tag, &FoundRow](const FName& RowName, const FNPCInfoRow& Row)
+			{
+				if (!FoundRow && Row.Tag == Tag)
+				{
+					FoundRow = &Row;
+				}
+			});
+			
+			if (FoundRow)
+			{
+				Comp->SetNPCData(*FoundRow);
+			}
+			
 			TagNPCsMap.Add(Comp->Tag ,NPC);
 		}
 #if WITH_EDITOR

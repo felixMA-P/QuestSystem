@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
+#include "NPCInfoRow.h"
 #include "NPCSystemComponent.generated.h"
 
 
@@ -17,6 +18,24 @@ public:
 	// Sets default values for this component's properties
 	UNPCSystemComponent();
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "NPC System", meta = (AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "NPC System")
 	FGameplayTag Tag;
+	
+private:
+	UPROPERTY()
+	FNPCInfoRow NPCData;
+
+public:
+	
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE FNPCInfoRow GetNPCData() const
+	{
+		return NPCData;
+	}
+	
+	FORCEINLINE void SetNPCData(const FNPCInfoRow& InNPCData)
+	{
+		NPCData = InNPCData;
+	}
+	
 };
