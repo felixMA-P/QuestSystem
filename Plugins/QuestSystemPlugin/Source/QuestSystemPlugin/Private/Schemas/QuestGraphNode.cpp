@@ -42,15 +42,15 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 DeleteOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
-	 	if (Pins.IsEmpty()) return;
-	 	UEdGraphPin * PinToRemove = GetPinAt(Pins.Num() - 1);
-	 	if (PinToRemove && PinToRemove->Direction != EEdGraphPinDirection::EGPD_Input)
-	 	{
-	 		RemovePin(PinToRemove);
-	 		SyncPinsWithOutputs();
-	 		GetGraph()->NotifyGraphChanged();
-	 		GetGraph()->Modify();
-	 	}
+	 	if (!QuestInfo || QuestInfo->OutPuts.IsEmpty()) return;
+
+	 	TArray<TSubclassOf<UCondition>> OutKeys;
+	 	QuestInfo->OutPuts.GetKeys(OutKeys);
+	 	QuestInfo->OutPuts.Remove(OutKeys.Last());
+
+	 	SyncPinsWithOutputs();
+	 	GetGraph()->NotifyGraphChanged();
+	 	GetGraph()->Modify();
 	 });
 
 	 DeleteInputPinDelegate = FExecuteAction::CreateLambda(

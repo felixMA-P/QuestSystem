@@ -85,7 +85,7 @@ void UQuestWorldSubsystem::CheckOnGoingQuestConditions()
 			OnChainQuestCompleted.Broadcast(OnGoingChainQuest->GetChainQuest());
 			AuxEndedChainQuests.Add(OnGoingChainQuest);
 		}
-		else if (OnGoingChainQuest->CurrentNode && OnGoingChainQuest->CurrentNode->QuestInfo != NodeInfoBeforeCheck)
+		else if (OnGoingChainQuest->CurrentNode && OnGoingChainQuest->CurrentNode->QuestInfo != NodeInfoBeforeCheck && OnGoingChainQuest->CurrentNode->QuestNodeType == EQuestNodeType::QuestNode)
 		{
 			OnQuestAdvanced.Broadcast(OnGoingChainQuest->CurrentNode->QuestInfo);
 		}
