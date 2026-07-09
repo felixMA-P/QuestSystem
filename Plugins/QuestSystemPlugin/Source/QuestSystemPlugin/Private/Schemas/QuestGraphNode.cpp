@@ -19,6 +19,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 	FQuestOutput NewOutput;
 	 	NewOutput.Condition = UCondition::StaticClass();
 	 	NewOutput.Text = FText::FromString("Output");
+	 	NewOutput.Color = GetBranchColor(QuestInfo->OutPuts.Num());
 	 	QuestInfo->OutPuts.Add(NewOutput);
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
@@ -170,6 +171,7 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	for (auto OutPutPin : OutPutPins)
 	{
 		OutPutPin->PinName = FName(QuestInfo->OutPuts[Index].Text.ToString());
+		TagPinWithBranchColor(OutPutPin, QuestInfo->OutPuts[Index].Color);
 		Index++;
 	}
 

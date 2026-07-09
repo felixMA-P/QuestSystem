@@ -4,6 +4,7 @@
 #include "ScopedTransaction.h"
 #include "Schemas/DialogEndGraphNode.h"
 #include "Schemas/DialogGraphNode.h"
+#include "Schemas/DialogGraphNodeBase.h"
 #include "Schemas/DialogKnotNode.h"
 #include "Schemas/DialogStartGraphNode.h"
 
@@ -58,6 +59,7 @@ void UDialogGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 	StartNode->NodePosY = 0;
 
 	UEdGraphPin* StartOutputPin = StartNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
+	UDialogGraphNodeBase::TagPinWithBranchColor(StartOutputPin, UDialogGraphNodeBase::GetBranchColor(0));
 
 	Graph.AddNode(StartNode, true, true);
 
@@ -111,6 +113,18 @@ void UDialogGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraph
 FLinearColor UDialogGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
 {
 	if (PinType.PinSubCategory == TEXT("DialogKnotPin"))
+	{
+		return FLinearColor::White;
+	}
+
+	FLinearColor BranchColor;
+	if (UDialogGraphNodeBase::TryGetBranchColor(PinType, BranchColor))
+	{
+		return BranchColor;
+	}
+
+	// Unconnected input pins are untagged (see UDialogGraphNodeBase::SyncInputPinColors) and should read as neutral.
+	if (PinType.PinSubCategory.IsNone())
 	{
 		return FLinearColor::White;
 	}

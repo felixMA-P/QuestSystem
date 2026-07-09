@@ -5,6 +5,7 @@
 #include "Schemas/ChainQuestGraphSchema.h"
 #include "ChainQuestGraph.h"
 #include "Schemas/QuestGraphNode.h"
+#include "Schemas/QuestGraphNodeBase.h"
 #include "Schemas/QuestKnotNode.h"
 #include "QuestInfo.h"
 #include "Schemas/QuestStartGraphNode.h"
@@ -79,6 +80,7 @@ void FChainQuestAssetEditorApp::SaveAsset_Execute()
 void FChainQuestAssetEditorApp::OnGraphChanged(const FEdGraphEditAction& EditAction)
 {
 	UpdateWorkingAssetFromGraph();
+	SyncAllInputPinColors();
 }
 
 void FChainQuestAssetEditorApp::OnNodeDetailViewPropertiesUpdated(const FPropertyChangedEvent& Event)
@@ -225,6 +227,7 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 	if (WorkingAsset->ChainQuestGraph == nullptr)
 	{
 		WorkingGraph->GetSchema()->CreateDefaultNodesForGraph(*WorkingGraph);
+		SyncAllInputPinColors();
 		return;
 	}
 
@@ -270,17 +273,31 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 			IdToPinMap.Add(Pin->PinId, UiPin);
 		}
 
+		UQuestInfo* NodeQuestInfo = Cast<UQuestInfo>(NewNode->GetQuestInfoBase());
+		int32 OutputPinIndex = 0;
 		for (UQuestRuntimePin* Pin : RuntimeNode->OutputPins)
 		{
 			UEdGraphPin* UiPin = NewNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, Pin->PinName);
 			UiPin->PinId = Pin->PinId;
-			
+
+			// Regular quest-node outputs use their saved color; the Start node has no backing OutPuts entry, so its
+			// single output always falls back to the default palette's first color.
+			if (NodeQuestInfo && NodeQuestInfo->OutPuts.IsValidIndex(OutputPinIndex))
+			{
+				UQuestGraphNodeBase::TagPinWithBranchColor(UiPin, NodeQuestInfo->OutPuts[OutputPinIndex].Color);
+			}
+			else
+			{
+				UQuestGraphNodeBase::TagPinWithBranchColor(UiPin, UQuestGraphNodeBase::GetBranchColor(OutputPinIndex));
+			}
+			OutputPinIndex++;
+
 			if (Pin->Connection != nullptr) {
 				Connections.Add({ Pin->PinId, Pin->Connection->PinId, Pin->ReroutePoints });
 			}
 
 			IdToPinMap.Add(Pin->PinId, UiPin);
-			
+
 		}
 
 		WorkingGraph->AddNode(NewNode, true, true);
@@ -312,7 +329,21 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 		(*ToPin)->LinkedTo.Add(PrevPin);
 	}
 
+	SyncAllInputPinColors();
+}
 
+void FChainQuestAssetEditorApp::SyncAllInputPinColors()
+{
+	if (!WorkingGraph) return;
+
+	for (UEdGraphNode* Node : WorkingGraph->Nodes)
+	{
+		// Knot nodes are pass-throughs, not part of OutPuts, and must keep their fixed "QuestKnotPin" subcategory.
+		if (UQuestGraphNodeBase* QuestNode = Cast<UQuestGraphNodeBase>(Node); QuestNode && QuestNode->GetQuestNodeType() != EQuestNodeType::KnotNode)
+		{
+			QuestNode->SyncInputPinColors();
+		}
+	}
 }
 
 UQuestGraphNodeBase* FChainQuestAssetEditorApp::GetSelectedNode(const FGraphPanelSelectionSet& Selection)

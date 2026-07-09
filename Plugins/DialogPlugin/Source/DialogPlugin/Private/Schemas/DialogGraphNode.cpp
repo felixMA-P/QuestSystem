@@ -57,6 +57,7 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 
 		FDialogOutput NewOutput;
 		NewOutput.ResponseText = FText::FromString(TEXT("Response"));
+		NewOutput.Color = GetBranchColor(DialogInfo->Outputs.Num());
 		DialogInfo->Outputs.Add(NewOutput);
 		SyncPinsWithOutputs();
 		GetGraph()->NotifyGraphChanged();
@@ -214,6 +215,7 @@ void UDialogGraphNode::SyncPinsWithOutputs()
 	for (int32 Index = 0; Index < OutputPins.Num(); ++Index)
 	{
 		OutputPins[Index]->PinFriendlyName = DialogInfo->Outputs[Index].ResponseText;
+		TagPinWithBranchColor(OutputPins[Index], DialogInfo->Outputs[Index].Color);
 	}
 }
 

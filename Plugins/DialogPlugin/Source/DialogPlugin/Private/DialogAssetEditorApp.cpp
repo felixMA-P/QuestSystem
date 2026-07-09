@@ -76,6 +76,7 @@ void FDialogAssetEditorApp::SaveAsset_Execute()
 void FDialogAssetEditorApp::OnGraphChanged(const FEdGraphEditAction& EditAction)
 {
 	UpdateWorkingAssetFromGraph();
+	SyncAllInputPinColors();
 }
 
 void FDialogAssetEditorApp::OnNodeDetailViewPropertiesUpdated(const FPropertyChangedEvent& Event)
@@ -218,6 +219,7 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 	if (WorkingAsset->DialogGraph == nullptr)
 	{
 		WorkingGraph->GetSchema()->CreateDefaultNodesForGraph(*WorkingGraph);
+		SyncAllInputPinColors();
 		return;
 	}
 
@@ -258,10 +260,25 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 			IdToPinMap.Add(Pin->PinId, UiPin);
 		}
 
+		UDialogLineInfo* NodeDialogInfo = Cast<UDialogLineInfo>(NewNode->GetDialogInfoBase());
+		int32 OutputPinIndex = 0;
 		for (UDialogRuntimePin* Pin : RuntimeNode->OutputPins)
 		{
 			UEdGraphPin* UiPin = NewNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, Pin->PinName);
 			UiPin->PinId = Pin->PinId;
+
+			// DialogNode outputs use their saved color (also re-tagged below by OnPropertiesChanged ->
+			// SyncPinsWithOutputs, harmless); the Start node has no backing Outputs entry, so its single
+			// output always falls back to the default palette's first color.
+			if (NodeDialogInfo && NodeDialogInfo->Outputs.IsValidIndex(OutputPinIndex))
+			{
+				UDialogGraphNodeBase::TagPinWithBranchColor(UiPin, NodeDialogInfo->Outputs[OutputPinIndex].Color);
+			}
+			else
+			{
+				UDialogGraphNodeBase::TagPinWithBranchColor(UiPin, UDialogGraphNodeBase::GetBranchColor(OutputPinIndex));
+			}
+			OutputPinIndex++;
 
 			if (Pin->Connection != nullptr)
 				Connections.Add({ Pin->PinId, Pin->Connection->PinId, Pin->ReroutePoints });
@@ -300,6 +317,22 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 
 		PrevPin->LinkedTo.Add(*ToPin);
 		(*ToPin)->LinkedTo.Add(PrevPin);
+	}
+
+	SyncAllInputPinColors();
+}
+
+void FDialogAssetEditorApp::SyncAllInputPinColors()
+{
+	if (!WorkingGraph) return;
+
+	for (UEdGraphNode* Node : WorkingGraph->Nodes)
+	{
+		// Knot nodes are pass-throughs, not part of Outputs, and must keep their fixed "DialogKnotPin" subcategory.
+		if (UDialogGraphNodeBase* DialogNode = Cast<UDialogGraphNodeBase>(Node); DialogNode && DialogNode->GetDialogNodeType() != EDialogNodeType::KnotNode)
+		{
+			DialogNode->SyncInputPinColors();
+		}
 	}
 }
 

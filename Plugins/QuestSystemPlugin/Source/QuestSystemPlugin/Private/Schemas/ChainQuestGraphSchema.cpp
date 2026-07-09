@@ -5,6 +5,7 @@
 #include "ScopedTransaction.h"
 #include "Schemas/QuestEndGraphNode.h"
 #include "Schemas/QuestGraphNode.h"
+#include "Schemas/QuestGraphNodeBase.h"
 #include "Schemas/QuestKnotNode.h"
 #include "Schemas/QuestStartGraphNode.h"
 
@@ -62,8 +63,9 @@ void UChainQuestGraphSchema::CreateDefaultNodesForGraph(UEdGraph& Graph) const
 	StartNode->NodePosX = 0;
 	StartNode->NodePosY = 0;
 
-	StartNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
-    
+	UEdGraphPin* StartOutputPin = StartNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(TEXT("Start")));
+	UQuestGraphNodeBase::TagPinWithBranchColor(StartOutputPin, UQuestGraphNodeBase::GetBranchColor(0));
+
 	Graph.AddNode(StartNode, true, true);
 	Graph.Modify();
 	
@@ -104,6 +106,18 @@ void UChainQuestGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdG
 FLinearColor UChainQuestGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
 {
 	if (PinType.PinSubCategory == TEXT("QuestKnotPin"))
+	{
+		return FLinearColor::White;
+	}
+
+	FLinearColor BranchColor;
+	if (UQuestGraphNodeBase::TryGetBranchColor(PinType, BranchColor))
+	{
+		return BranchColor;
+	}
+
+	// Unconnected input pins are untagged (see UQuestGraphNodeBase::SyncInputPinColors) and should read as neutral.
+	if (PinType.PinSubCategory.IsNone())
 	{
 		return FLinearColor::White;
 	}

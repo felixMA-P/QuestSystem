@@ -80,6 +80,9 @@ protected:
 private:
 	void CreateGraphEditorCommands();
 
+	// Re-derives every node's input pin colors from their current connections. Called whenever the graph topology changes.
+	void SyncAllInputPinColors();
+
 	UPROPERTY()
 	UChainQuest* WorkingAsset = nullptr;
 
