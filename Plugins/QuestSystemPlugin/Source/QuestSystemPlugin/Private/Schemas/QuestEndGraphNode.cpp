@@ -1,6 +1,6 @@
 #include "Schemas/QuestEndGraphNode.h"
 
-#include <string>
+#include "ScopedTransaction.h"
 
 UQuestEndGraphNode::UQuestEndGraphNode()
 {
@@ -13,20 +13,13 @@ UQuestEndGraphNode::UQuestEndGraphNode()
 	AddNewInputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
-	 	TArray<UEdGraphPin*> InputPins = Pins.FilterByPredicate([](UEdGraphPin* Pin)
-	 	{
-	 		return Pin->Direction == EGPD_Input;
-	 	});
+	 	const FScopedTransaction Transaction(FText::FromString("Add Quest End Input Pin"));
 
-	 	FString CurrentInputName = TEXT("Input");
-	 	
-	 	CreateCustomPin(
-			  EGPD_Input, 
-			  FName(CurrentInputName)
-			  );
-		
+	 	Modify();
+
+	 	CreateCustomPin(EGPD_Input, FName(TEXT("Input")));
+
 	 	GetGraph()->NotifyGraphChanged();
-	 	GetGraph()->Modify();
 	 });
 
 	DeleteInputPinDelegate = FExecuteAction::CreateLambda(
@@ -36,14 +29,17 @@ UQuestEndGraphNode::UQuestEndGraphNode()
 		 {
 			 return Pin->Direction == EEdGraphPinDirection::EGPD_Input;
 		 });
-	 	
+
 		 if (InputPins.IsEmpty()) return;
 
 		if (UEdGraphPin* PinToRemove = InputPins.Last())
 		{
+			const FScopedTransaction Transaction(FText::FromString("Delete Quest End Input Pin"));
+
+			Modify();
+
 			RemovePin(PinToRemove);
 			GetGraph()->NotifyGraphChanged();
-			GetGraph()->Modify();
 		}
 	});
 }

@@ -2,6 +2,7 @@
 
 #include "DialogLineInfo.h"
 #include "Framework/Commands/UIAction.h"
+#include "ScopedTransaction.h"
 #include "ToolMenu.h"
 
 namespace
@@ -49,26 +50,28 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 	{
 		if (!DialogInfo) return;
 
+		const FScopedTransaction Transaction(FText::FromString("Add Dialog Output Pin"));
+
+		Modify();
+		DialogInfo->Modify();
+
 		FDialogOutput NewOutput;
 		NewOutput.ResponseText = FText::FromString(TEXT("Response"));
 		DialogInfo->Outputs.Add(NewOutput);
 		SyncPinsWithOutputs();
 		GetGraph()->NotifyGraphChanged();
-		GetGraph()->Modify();
 	});
 
 	AddNewInputPinDelegate = FExecuteAction::CreateLambda(
 	[this]()
 	{
-		TArray<UEdGraphPin*> InputPins = Pins.FilterByPredicate([](UEdGraphPin* Pin)
-		{
-			return Pin->Direction == EGPD_Input;
-		});
+		const FScopedTransaction Transaction(FText::FromString("Add Dialog Input Pin"));
+
+		Modify();
 
 		CreateCustomPin(EGPD_Input, FName(TEXT("Input")));
 
 		GetGraph()->NotifyGraphChanged();
-		GetGraph()->Modify();
 	});
 
 	DeleteOutputPinDelegate = FExecuteAction::CreateLambda(
@@ -77,13 +80,20 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 		UEdGraphPin* PinToRemove = GetPinAt(Pins.Num() - 1);
 		if (PinToRemove && PinToRemove->Direction != EEdGraphPinDirection::EGPD_Input)
 		{
+			const FScopedTransaction Transaction(FText::FromString("Delete Dialog Output Pin"));
+
+			Modify();
+			if (DialogInfo)
+			{
+				DialogInfo->Modify();
+			}
+
 			RemovePin(PinToRemove);
 			if (DialogInfo && DialogInfo->Outputs.Num() > 0)
 			{
 				DialogInfo->Outputs.RemoveAt(DialogInfo->Outputs.Num() - 1);
 			}
 			GetGraph()->NotifyGraphChanged();
-			GetGraph()->Modify();
 		}
 	});
 
@@ -99,9 +109,12 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 
 		if (UEdGraphPin* PinToRemove = InputPins.Last())
 		{
+			const FScopedTransaction Transaction(FText::FromString("Delete Dialog Input Pin"));
+
+			Modify();
+
 			RemovePin(PinToRemove);
 			GetGraph()->NotifyGraphChanged();
-			GetGraph()->Modify();
 		}
 	});
 

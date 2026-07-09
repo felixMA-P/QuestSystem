@@ -1,6 +1,7 @@
 #include "Schemas/DialogEndGraphNode.h"
 
 #include "Framework/Commands/UIAction.h"
+#include "ScopedTransaction.h"
 #include "ToolMenu.h"
 
 UDialogEndGraphNode::UDialogEndGraphNode()
@@ -14,15 +15,13 @@ UDialogEndGraphNode::UDialogEndGraphNode()
 	AddNewInputPinDelegate = FExecuteAction::CreateLambda(
 	[this]()
 	{
-		TArray<UEdGraphPin*> InputPins = Pins.FilterByPredicate([](UEdGraphPin* Pin)
-		{
-			return Pin->Direction == EGPD_Input;
-		});
+		const FScopedTransaction Transaction(FText::FromString("Add Dialog End Input Pin"));
+
+		Modify();
 
 		CreateCustomPin(EGPD_Input, FName(TEXT("Input")));
 
 		GetGraph()->NotifyGraphChanged();
-		GetGraph()->Modify();
 	});
 
 	DeleteInputPinDelegate = FExecuteAction::CreateLambda(
@@ -37,9 +36,12 @@ UDialogEndGraphNode::UDialogEndGraphNode()
 
 		if (UEdGraphPin* PinToRemove = InputPins.Last())
 		{
+			const FScopedTransaction Transaction(FText::FromString("Delete Dialog End Input Pin"));
+
+			Modify();
+
 			RemovePin(PinToRemove);
 			GetGraph()->NotifyGraphChanged();
-			GetGraph()->Modify();
 		}
 	});
 }

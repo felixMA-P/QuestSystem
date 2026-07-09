@@ -2,6 +2,7 @@
 
 #include "QuestInfo.h"
 #include "Framework/Commands/UIAction.h"
+#include "ScopedTransaction.h"
 #include "ToolMenu.h"
 #include "QuestInfo.h"
 
@@ -10,33 +11,29 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	AddNewOutputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
+	 	const FScopedTransaction Transaction(FText::FromString("Add Quest Output Pin"));
+
+	 	Modify();
+	 	QuestInfo->Modify();
+
 	 	FQuestOutput NewOutput;
 	 	NewOutput.Condition = UCondition::StaticClass();
 	 	NewOutput.Text = FText::FromString("Output");
 	 	QuestInfo->OutPuts.Add(NewOutput);
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
-	 	GetGraph()->Modify();
 	 });
 
 	AddNewInputPinDelegate = FExecuteAction::CreateLambda(
 	 [this]()
 	 {
+	 	const FScopedTransaction Transaction(FText::FromString("Add Quest Input Pin"));
 
-	 	TArray<UEdGraphPin*> const InputPins = Pins.FilterByPredicate([](UEdGraphPin* Pin)
-		 {
-			 return Pin->Direction == EGPD_Input;
-		 });
+	 	Modify();
 
-	 	FString CurrentInputName = TEXT("Input");
-	 	
-		CreateCustomPin(
-			 EGPD_Input, 
-			 FName(CurrentInputName)
-			 );
-		
-		 GetGraph()->NotifyGraphChanged();
-		 GetGraph()->Modify();
+	 	CreateCustomPin(EGPD_Input, FName(TEXT("Input")));
+
+	 	GetGraph()->NotifyGraphChanged();
 	 });
 
 	 DeleteOutputPinDelegate = FExecuteAction::CreateLambda(
@@ -44,11 +41,15 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 {
 	 	if (!QuestInfo || QuestInfo->OutPuts.IsEmpty()) return;
 
+	 	const FScopedTransaction Transaction(FText::FromString("Delete Quest Output Pin"));
+
+	 	Modify();
+	 	QuestInfo->Modify();
+
 	 	QuestInfo->OutPuts.Pop();
 
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
-	 	GetGraph()->Modify();
 	 });
 
 	 DeleteInputPinDelegate = FExecuteAction::CreateLambda(
@@ -58,14 +59,17 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 	{
 	 		return Pin->Direction == EEdGraphPinDirection::EGPD_Input;
 	 	});
-	 	
+
 	 	if (InputPins.IsEmpty()) return;
 
 	    if (UEdGraphPin* PinToRemove = InputPins.Last())
 	 	{
+	 		const FScopedTransaction Transaction(FText::FromString("Delete Quest Input Pin"));
+
+	 		Modify();
+
 	 		RemovePin(PinToRemove);
 	 		GetGraph()->NotifyGraphChanged();
-	 		GetGraph()->Modify();
 	 	}
 	 });
 
