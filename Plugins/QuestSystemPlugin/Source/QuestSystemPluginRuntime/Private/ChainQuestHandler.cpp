@@ -7,6 +7,7 @@
 #include "QuestSystemPluginRuntime.h"
 #include "QuestTagsManager.h"
 #include "QuestWorldSubsystem.h"
+#include "SystemFunctionHelper.h"
 
 FChainQuestHandler::FChainQuestHandler(const UChainQuest* InChainQuest)
 {
@@ -58,9 +59,22 @@ bool FChainQuestHandler::CheckCurrentNodeConditions(UWorld* World, int Depth)
 
 	for (const FQuestOutput& Output : Info->OutPuts)
 	{
-		if (!Output.Condition) { Index++; continue; }
+		bool bConditionMet;
+		if (ChainQuest->bUseSimpleConditions)
+		{
+			if (!Output.ConditionTag.IsValid()) { Index++; continue; }
 
-		if (Output.Condition.GetDefaultObject()->CheckCondition(World))
+			const UQuestWorldSubsystem* QuestSystem = USystemFunctionHelper::GetQuestSystem(World);
+			bConditionMet = QuestSystem && QuestSystem->QuestGameplayTagsContainer.HasTagExact(Output.ConditionTag);
+		}
+		else
+		{
+			if (!Output.Condition) { Index++; continue; }
+
+			bConditionMet = Output.Condition.GetDefaultObject()->CheckCondition(World);
+		}
+
+		if (bConditionMet)
 		{
 			if (!CurrentNode->OutputPins.IsValidIndex(Index) || !CurrentNode->OutputPins[Index]->Connection || !CurrentNode->OutputPins[Index]->Connection->Parent)
 			{

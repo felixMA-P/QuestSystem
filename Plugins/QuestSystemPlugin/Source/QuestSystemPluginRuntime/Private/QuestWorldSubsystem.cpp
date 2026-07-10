@@ -106,23 +106,25 @@ void UQuestWorldSubsystem::AddChainQuest(const UChainQuest* ToAddChainQuest)
 	if (FindChainQuest(ToAddChainQuest))
 		return;
 
-	if (ToAddChainQuest->StartCondition == nullptr)
+	bool bShouldStart;
+	if (ToAddChainQuest->bUseSimpleConditions)
+	{
+		bShouldStart = !ToAddChainQuest->StartConditionTag.IsValid()
+			|| QuestGameplayTagsContainer.HasTagExact(ToAddChainQuest->StartConditionTag);
+	}
+	else
+	{
+		bShouldStart = ToAddChainQuest->StartCondition == nullptr
+			|| ToAddChainQuest->StartCondition.GetDefaultObject()->CheckCondition(GetWorld());
+	}
+
+	if (bShouldStart)
 	{
 		UE_LOG(LogQuestSystem, Log, TEXT("ChainQuest '%s' started"), *ToAddChainQuest->Title.ToString());
 		ChainQuests.Add(ToAddChainQuest->GetHandler());
 		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
 		OnChainQuestStarted.Broadcast(ToAddChainQuest);
-		return;
 	}
-
-	if (ToAddChainQuest->StartCondition.GetDefaultObject()->CheckCondition(GetWorld()))
-	{
-		UE_LOG(LogQuestSystem, Log, TEXT("ChainQuest '%s' started (condition met)"), *ToAddChainQuest->Title.ToString());
-		ChainQuests.Add(ToAddChainQuest->GetHandler());
-		ChainQuests.Last()->CheckCurrentEndDay(CurrentDay);
-		OnChainQuestStarted.Broadcast(ToAddChainQuest);
-	}
-	
 }
 
 bool UQuestWorldSubsystem::FindChainQuest(const UChainQuest* InChainQuest)

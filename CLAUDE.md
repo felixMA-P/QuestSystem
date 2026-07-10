@@ -40,6 +40,8 @@ Newly added stub plugin. Minimal implementation.
 UDataAssetChainQuests          ← Data asset: array of UChainQuest* to load at once
 └── UChainQuest                ← Blueprint/C++ subclassable UObject asset per quest chain
     ├── StartCondition         ← TSubclassOf<UQuestCondition>; nil = always starts
+    ├── bUseSimpleConditions   ← When true, StartCondition/FQuestOutput::Condition (Blueprint classes) are ignored in favor of StartConditionTag/FQuestOutput::ConditionTag (FGameplayTag, exact-matched against QuestGameplayTagsContainer)
+    ├── StartConditionTag      ← FGameplayTag; used instead of StartCondition when bUseSimpleConditions is true
     ├── bHasCalendarDates      ← Enables day-based expiry per quest node
     └── UChainQuestGraph       ← Runtime graph: array of UQuestRuntimeNode*
         └── UQuestRuntimeNode  ← Node holding UQuestInfoBase* + input/output UQuestRuntimePin*
@@ -74,6 +76,8 @@ Both are CDO-executed (called on `GetDefaultObject()`):
 - `UEndQuestResult` — override `ExecuteResult(UWorld*)` in C++ or implement `ExecuteResultEvent` in Blueprint
 
 Conditions for quest advancement live in `UQuestInfo::OutPuts` (key = condition class, value = display text). The order of map iteration determines pin matching.
+
+Each `FQuestOutput` also carries a `ConditionTag` (`FGameplayTag`), used instead of `Condition` when the owning `UChainQuest::bUseSimpleConditions` is true — satisfied when that tag is present (exact match) in `UQuestWorldSubsystem::QuestGameplayTagsContainer`. This lets simple tag-gated advancement skip writing a `UQuestCondition` Blueprint subclass entirely.
 
 ### Blueprint Access Helpers
 

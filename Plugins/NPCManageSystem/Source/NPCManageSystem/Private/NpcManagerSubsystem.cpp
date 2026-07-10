@@ -13,11 +13,11 @@ UNpcManagerSubsystem::UNpcManagerSubsystem()
 {
 	// Real, designer-populated DataTable asset; create it in the editor at this path
 	// (Right-click > Miscellaneous > Data Table > Row Struct: NPCInfoRow) if it doesn't exist yet.
-	static ConstructorHelpers::FObjectFinder<UDataTable> NPCDataTableFinder(TEXT("/NPCManageSystem/Data/DT_NPCInfo.DT_NPCInfo"));
+	/*static ConstructorHelpers::FObjectFinder<UDataTable> NPCDataTableFinder(TEXT("/NPCManageSystem/Data/DT_NPCInfo.DT_NPCInfo"));
 	if (NPCDataTableFinder.Succeeded())
 	{
 		NPCDataTable = NPCDataTableFinder.Object;
-	}
+	}*/
 }
 
 void UNpcManagerSubsystem::AddNPC(AActor* NPC)
@@ -121,21 +121,21 @@ void UNpcManagerSubsystem::RegisterNPC(AActor* Actor)
 
 void UNpcManagerSubsystem::InitNpcList(const FActorsInitializedParams& ActorsInitializedParams)
 {
-	TArray<AActor*> OutNpcs;
+	/*TArray<AActor*> OutNpcs;
 	
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutNpcs);
 
 	for (AActor* Npc : OutNpcs)
 	{
 		AddNPC(Npc);
-	}
+	}*/
 }
 
 void UNpcManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::RegisterNPC));
-	OnActorsInitializedDelegate = GetWorld()->OnActorsInitialized.Add(UWorld::FOnWorldInitializedActors::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::InitNpcList));
+	/*GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::RegisterNPC));
+	OnActorsInitializedDelegate = GetWorld()->OnActorsInitialized.Add(UWorld::FOnWorldInitializedActors::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::InitNpcList));*/
 }
 
 void UNpcManagerSubsystem::Deinitialize()

@@ -20,6 +20,10 @@ struct FQuestOutput
 	UPROPERTY(EditAnywhere, NoClear, Category = "QuestOutput")
 	TSubclassOf<UQuestCondition> Condition;
 
+	// Used instead of Condition when the owning ChainQuest has bUseSimpleConditions enabled — satisfied when this tag is present (exact match) in UQuestWorldSubsystem::QuestGameplayTagsContainer.
+	UPROPERTY(EditAnywhere, Category = "QuestOutput")
+	FGameplayTag ConditionTag;
+
 	UPROPERTY(EditAnywhere, Category = "QuestOutput")
 	FText Text = FText::FromString("Output");
 

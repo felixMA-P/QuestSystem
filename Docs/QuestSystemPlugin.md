@@ -14,14 +14,16 @@ UDataAssetChainQuests
 └── UChainQuest[]               ← One quest chain (Blueprint/C++ subclassable UObject asset)
     ├── Title                   ← FText displayed in UI
     ├── bHasCalendarDates       ← Enables day-based expiry per quest node
-    ├── StartCondition          ← TSubclassOf<UQuestCondition>; nil = always starts
+    ├── bUseSimpleConditions    ← When true, all conditions in the chain use gameplay tags instead of UQuestCondition classes
+    ├── StartCondition          ← TSubclassOf<UQuestCondition>; nil = always starts (used when bUseSimpleConditions is false)
+    ├── StartConditionTag       ← FGameplayTag; unset = always starts (used when bUseSimpleConditions is true)
     └── UChainQuestGraph
         └── UQuestRuntimeNode[]
             ├── UQuestInfo      ← Regular quest node
             │   ├── Title
             │   ├── Description
             │   ├── DayToComplete   ← 0 = no expiry
-            │   └── OutPuts         ← TMap<TSubclassOf<UQuestCondition>, FText>
+            │   └── OutPuts         ← TMap<TSubclassOf<UQuestCondition>, FText>; each entry also carries a ConditionTag (FGameplayTag) used when bUseSimpleConditions is true
             └── UEndQuestInfo   ← Terminal node
                 ├── Title
                 ├── EndResult       ← TSubclassOf<UEndQuestResult>
@@ -45,7 +47,9 @@ The top-level quest-chain asset. Create one per quest arc. Subclass in Blueprint
 |---|---|---|
 | `Title` | `FText` | Human-readable chain name |
 | `bHasCalendarDates` | `bool` | When true, quest nodes use `DayToComplete` for expiry |
-| `StartCondition` | `TSubclassOf<UQuestCondition>` | Optional gate — chain only starts if this condition passes |
+| `bUseSimpleConditions` | `bool` | When true, `StartCondition`/`FQuestOutput::Condition` are ignored in favor of `StartConditionTag`/`FQuestOutput::ConditionTag` for the whole chain |
+| `StartCondition` | `TSubclassOf<UQuestCondition>` | Optional gate — chain only starts if this condition passes (used when `bUseSimpleConditions` is false) |
+| `StartConditionTag` | `FGameplayTag` | Optional gate — chain only starts if this tag is present (exact match) in `QuestGameplayTagsContainer` (used when `bUseSimpleConditions` is true) |
 | `ChainQuestGraph` | `UChainQuestGraph*` | Runtime graph; populated by the editor on save |
 
 ### UQuestInfo
@@ -57,7 +61,7 @@ A regular quest node. Holds the display data and the output conditions that dete
 | `Title` | `FText` | Quest title shown to the player |
 | `Description` | `FText` | Quest description |
 | `DayToComplete` | `int` | Days until automatic failure (0 = unlimited) |
-| `OutPuts` | `TMap<TSubclassOf<UQuestCondition>, FText>` | Ordered map of conditions → display text; first passing condition advances the quest |
+| `OutPuts` | `TMap<TSubclassOf<UQuestCondition>, FText>` | Ordered map of conditions → display text; first passing condition advances the quest. Each entry also has a `ConditionTag` (`FGameplayTag`), used instead of the condition class when the owning chain's `bUseSimpleConditions` is true |
 
 ### UEndQuestInfo
 
@@ -142,6 +146,8 @@ virtual bool CheckCondition(UWorld* World);
 UFUNCTION(BlueprintImplementableEvent, Category = "Quest System|Condition")
 bool CheckConditionEvent(UWorld* World);
 ```
+
+For the common case of "does the player have tag X", a `UQuestCondition` subclass isn't required at all — enable `UChainQuest::bUseSimpleConditions` and author `StartConditionTag`/`FQuestOutput::ConditionTag` instead. These are checked directly against `UQuestWorldSubsystem::QuestGameplayTagsContainer` with an exact tag match, bypassing `UQuestCondition` entirely for that chain.
 
 The default C++ `CheckCondition` calls `CheckConditionEvent` and returns its result. Both are called on the CDO (class default object).
 
