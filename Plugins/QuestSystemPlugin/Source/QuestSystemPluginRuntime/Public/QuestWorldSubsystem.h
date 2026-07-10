@@ -51,7 +51,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChainQuestCompleted, const UChain
 /**
  *
  */
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestWorldSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()

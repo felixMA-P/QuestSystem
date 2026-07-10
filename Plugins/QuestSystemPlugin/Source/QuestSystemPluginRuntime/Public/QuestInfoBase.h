@@ -5,7 +5,7 @@
 #include "UObject/Object.h"
 #include "QuestInfoBase.generated.h"
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class QUESTSYSTEMPLUGINRUNTIME_API UQuestInfoBase : public UObject
 {
 	GENERATED_BODY()

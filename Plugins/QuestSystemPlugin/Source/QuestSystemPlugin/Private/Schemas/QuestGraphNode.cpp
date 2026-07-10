@@ -17,7 +17,7 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 	QuestInfo->Modify();
 
 	 	FQuestOutput NewOutput;
-	 	NewOutput.Condition = UCondition::StaticClass();
+	 	NewOutput.Condition = UQuestCondition::StaticClass();
 	 	NewOutput.Text = FText::FromString("Output");
 	 	NewOutput.Color = GetBranchColor(QuestInfo->OutPuts.Num());
 	 	QuestInfo->OutPuts.Add(NewOutput);

@@ -3,13 +3,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "Condition.generated.h"
+#include "QuestCondition.generated.h"
 
 
 class UQuestWorldSubsystem;
 
 UCLASS(BlueprintType, Blueprintable)
-class QUESTSYSTEMPLUGINRUNTIME_API UCondition : public UObject
+class QUESTSYSTEMPLUGINRUNTIME_API UQuestCondition : public UObject
 {
 	GENERATED_BODY()
 

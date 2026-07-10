@@ -3,7 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "Templates/SubclassOf.h"
-#include "Condition.h"
+#include "QuestCondition.h"
 #include "UObject/Object.h"
 #include "ChainQuest.generated.h"
 
@@ -11,7 +11,7 @@
 class FChainQuestHandler;
 class UChainQuestGraph;
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class QUESTSYSTEMPLUGINRUNTIME_API UChainQuest : public UObject
 {
 	GENERATED_BODY()
@@ -29,7 +29,7 @@ public:
 	bool bHasCalendarDates = false;
 
 	UPROPERTY(EditAnywhere, Category = "ChainQuestQuest")
-	TSubclassOf<UCondition> StartCondition;
+	TSubclassOf<UQuestCondition> StartCondition;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "ChainQuestQuest")
 	UChainQuestGraph* ChainQuestGraph = nullptr;

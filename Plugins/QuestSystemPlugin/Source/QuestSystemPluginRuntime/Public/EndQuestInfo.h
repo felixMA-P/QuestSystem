@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "Templates/SubclassOf.h"
 #include "ChainQuestGraph.h"
-#include "Condition.h"
+#include "QuestCondition.h"
 #include "QuestInfoBase.h"
 #include "EndQuestInfo.generated.h"
 

@@ -3,7 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "Templates/SubclassOf.h"
-#include "Condition.h"
+#include "QuestCondition.h"
 #include "GameplayTagContainer.h"
 #include "QuestEvent.h"
 #include "QuestInfoBase.h"
@@ -18,7 +18,7 @@ struct FQuestOutput
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, NoClear, Category = "QuestOutput")
-	TSubclassOf<UCondition> Condition;
+	TSubclassOf<UQuestCondition> Condition;
 
 	UPROPERTY(EditAnywhere, Category = "QuestOutput")
 	FText Text = FText::FromString("Output");

@@ -25,7 +25,7 @@ struct FDialogOutput
 	FLinearColor Color = FLinearColor::White;
 };
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class DIALOGPLUGINRUNTIME_API UDialogLineInfo : public UDialogInfoBase
 {
 	GENERATED_BODY()

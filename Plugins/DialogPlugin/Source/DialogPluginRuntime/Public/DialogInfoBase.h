@@ -4,7 +4,7 @@
 #include "UObject/Object.h"
 #include "DialogInfoBase.generated.h"
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class DIALOGPLUGINRUNTIME_API UDialogInfoBase : public UObject
 {
 	GENERATED_BODY()

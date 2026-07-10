@@ -19,7 +19,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogStarted);
 // Fires when the dialog reaches an EndNode.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogEnded);
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class DIALOGPLUGINRUNTIME_API UDialogWorldSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()

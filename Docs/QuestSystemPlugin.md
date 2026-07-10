@@ -14,14 +14,14 @@ UDataAssetChainQuests
 └── UChainQuest[]               ← One quest chain (Blueprint/C++ subclassable UObject asset)
     ├── Title                   ← FText displayed in UI
     ├── bHasCalendarDates       ← Enables day-based expiry per quest node
-    ├── StartCondition          ← TSubclassOf<UCondition>; nil = always starts
+    ├── StartCondition          ← TSubclassOf<UQuestCondition>; nil = always starts
     └── UChainQuestGraph
         └── UQuestRuntimeNode[]
             ├── UQuestInfo      ← Regular quest node
             │   ├── Title
             │   ├── Description
             │   ├── DayToComplete   ← 0 = no expiry
-            │   └── OutPuts         ← TMap<TSubclassOf<UCondition>, FText>
+            │   └── OutPuts         ← TMap<TSubclassOf<UQuestCondition>, FText>
             └── UEndQuestInfo   ← Terminal node
                 ├── Title
                 ├── EndResult       ← TSubclassOf<UEndQuestResult>
@@ -45,7 +45,7 @@ The top-level quest-chain asset. Create one per quest arc. Subclass in Blueprint
 |---|---|---|
 | `Title` | `FText` | Human-readable chain name |
 | `bHasCalendarDates` | `bool` | When true, quest nodes use `DayToComplete` for expiry |
-| `StartCondition` | `TSubclassOf<UCondition>` | Optional gate — chain only starts if this condition passes |
+| `StartCondition` | `TSubclassOf<UQuestCondition>` | Optional gate — chain only starts if this condition passes |
 | `ChainQuestGraph` | `UChainQuestGraph*` | Runtime graph; populated by the editor on save |
 
 ### UQuestInfo
@@ -57,7 +57,7 @@ A regular quest node. Holds the display data and the output conditions that dete
 | `Title` | `FText` | Quest title shown to the player |
 | `Description` | `FText` | Quest description |
 | `DayToComplete` | `int` | Days until automatic failure (0 = unlimited) |
-| `OutPuts` | `TMap<TSubclassOf<UCondition>, FText>` | Ordered map of conditions → display text; first passing condition advances the quest |
+| `OutPuts` | `TMap<TSubclassOf<UQuestCondition>, FText>` | Ordered map of conditions → display text; first passing condition advances the quest |
 
 ### UEndQuestInfo
 
@@ -93,7 +93,7 @@ UQuestWorldSubsystem* QS = USystemFunctionHelper::GetQuestSystem(GetWorld());
 
 | Property | Type | Description |
 |---|---|---|
-| `QuestGameplayTagsContainer` | `FGameplayTagContainer` | World-state tag store; `UCondition` subclasses query this |
+| `QuestGameplayTagsContainer` | `FGameplayTagContainer` | World-state tag store; `UQuestCondition` subclasses query this |
 
 #### Functions
 
@@ -116,7 +116,7 @@ UQuestWorldSubsystem* QS = USystemFunctionHelper::GetQuestSystem(GetWorld());
 
 1. `CheckOnGoingQuestConditions()` iterates all active `FChainQuestHandler` instances.
 2. Each handler calls `CheckCurrentNodeConditions(World)`.
-3. `UQuestInfo::OutPuts` keys are iterated in order; the first `UCondition::CheckCondition()` that returns `true` advances `CurrentNode` along the matching output pin.
+3. `UQuestInfo::OutPuts` keys are iterated in order; the first `UQuestCondition::CheckCondition()` that returns `true` advances `CurrentNode` along the matching output pin.
 4. Advancement recurses until an `EndNode` or no condition fires.
 5. On `EndNode`: `UEndQuestResult::ExecuteResult()` is called, then `NextChainQuest` is queued if set.
 
@@ -130,7 +130,7 @@ Quests with `DayToComplete > 0` automatically expire by taking the first output 
 
 ## Extension Points
 
-### UCondition
+### UQuestCondition
 
 Subclass in Blueprint or C++ to define custom quest advancement conditions.
 

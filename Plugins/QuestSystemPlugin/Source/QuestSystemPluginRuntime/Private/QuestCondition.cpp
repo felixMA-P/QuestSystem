@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Condition.h"
+#include "QuestCondition.h"
 #include "QuestWorldSubsystem.h"
 
-bool UCondition::CheckCondition(UWorld* World)
+bool UQuestCondition::CheckCondition(UWorld* World)
 {
 	return CheckConditionEvent(World);
 }

@@ -9,7 +9,7 @@
 class UDialogHandler;
 class UDialogGraph;
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class DIALOGPLUGINRUNTIME_API UDialog : public UObject
 {
 	GENERATED_BODY()

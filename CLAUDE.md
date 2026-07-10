@@ -39,12 +39,12 @@ Newly added stub plugin. Minimal implementation.
 ```
 UDataAssetChainQuests          ← Data asset: array of UChainQuest* to load at once
 └── UChainQuest                ← Blueprint/C++ subclassable UObject asset per quest chain
-    ├── StartCondition         ← TSubclassOf<UCondition>; nil = always starts
+    ├── StartCondition         ← TSubclassOf<UQuestCondition>; nil = always starts
     ├── bHasCalendarDates      ← Enables day-based expiry per quest node
     └── UChainQuestGraph       ← Runtime graph: array of UQuestRuntimeNode*
         └── UQuestRuntimeNode  ← Node holding UQuestInfoBase* + input/output UQuestRuntimePin*
             ├── UQuestInfo     ← Regular quest: Title, Description, DayToComplete,
-            │                    OutPuts (TMap<TSubclassOf<UCondition>, FText>)
+            │                    OutPuts (TMap<TSubclassOf<UQuestCondition>, FText>)
             └── UEndQuestInfo  ← End quest: EndResult class, optional NextChainQuest
 ```
 
@@ -59,7 +59,7 @@ UDataAssetChainQuests          ← Data asset: array of UChainQuest* to load at 
 
 **Condition evaluation flow** (`CheckOnGoingQuestConditions`):
 1. For each active handler, call `FChainQuestHandler::CheckCurrentNodeConditions(World)`
-2. That function iterates `UQuestInfo::OutPuts` keys in order; the first `UCondition::CheckCondition()` that returns true advances `CurrentNode` along the matching output pin
+2. That function iterates `UQuestInfo::OutPuts` keys in order; the first `UQuestCondition::CheckCondition()` that returns true advances `CurrentNode` along the matching output pin
 3. Advancement recurses until an `EndNode` or no condition fires
 4. On `EndNode`: `UEndQuestResult::ExecuteResult()` runs, optional `NextChainQuest` is queued
 
@@ -70,7 +70,7 @@ UDataAssetChainQuests          ← Data asset: array of UChainQuest* to load at 
 ### Condition and Result Extension Points
 
 Both are CDO-executed (called on `GetDefaultObject()`):
-- `UCondition` — override `CheckCondition(UWorld*)` in C++ or implement `CheckConditionEvent` in Blueprint
+- `UQuestCondition` — override `CheckCondition(UWorld*)` in C++ or implement `CheckConditionEvent` in Blueprint
 - `UEndQuestResult` — override `ExecuteResult(UWorld*)` in C++ or implement `ExecuteResultEvent` in Blueprint
 
 Conditions for quest advancement live in `UQuestInfo::OutPuts` (key = condition class, value = display text). The order of map iteration determines pin matching.
@@ -111,4 +111,4 @@ Quest status tags registered natively via `FQuestTagsManager` singleton (initial
 - `Gameplay.QuestSystem.Quest.Status.OnGoing`
 - `Gameplay.QuestSystem.Quest.Status.Completed`
 
-The primary condition mechanism is `UQuestWorldSubsystem::QuestGameplayTagsContainer` — game systems add tags here to represent world state, and `UCondition` subclasses query it.
+The primary condition mechanism is `UQuestWorldSubsystem::QuestGameplayTagsContainer` — game systems add tags here to represent world state, and `UQuestCondition` subclasses query it.
