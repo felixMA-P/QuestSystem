@@ -1,7 +1,6 @@
 #include "DialogWorldSubsystem.h"
 
 #include "Dialog.h"
-#include "DialogDataAsset.h"
 #include "DialogEndInfo.h"
 #include "DialogGraph.h"
 #include "DialogHandler.h"
@@ -31,39 +30,15 @@ void UDialogWorldSubsystem::AddGameplayTags(const TArray<FGameplayTag>& Gameplay
 	}
 }
 
-void UDialogWorldSubsystem::InitializeDialogs(const UDialogDataAsset* DataAsset)
+void UDialogWorldSubsystem::StartDialog(UDialog* Dialog)
 {
-	if (!DataAsset)
+	if (!Dialog)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Dialog System: InitializeDialogs called with null DataAsset"));
-		return;
-	}
-	
-	DialogsAsset = DataAsset;
-}
-
-void UDialogWorldSubsystem::StartDialog(const FGameplayTag & DialogGameplayTag)
-{
-	if (!DialogGameplayTag.IsValid())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Dialog System: DialogGameplayTag is not valid"));
+		UE_LOG(LogTemp, Warning, TEXT("Dialog System: StartDialog called with a null Dialog"));
 		return;
 	}
 
-	if (!DialogsAsset)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Dialog System: No DialogDataAsset loaded. Call InitializeDialogs first."));
-		return;
-	}
-
-	UDialog* const* FoundDialog = DialogsAsset->Dialogs.Find(DialogGameplayTag);
-	if (!FoundDialog || !*FoundDialog)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Dialog System: No dialog found for tag %s"), *DialogGameplayTag.ToString());
-		return;
-	}
-
-	StartDialogInternal(*FoundDialog);
+	StartDialogInternal(Dialog);
 }
 
 void UDialogWorldSubsystem::StartDialogInternal(UDialog* Dialog)

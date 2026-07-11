@@ -8,8 +8,6 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "DialogWorldSubsystem.generated.h"
 
-class UDialogDataAsset;
-
 // Fires when the active line changes — either on dialog start or after a response is selected.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogLineChanged, UDialogLineInfo*, LineInfo);
 
@@ -34,9 +32,6 @@ protected:
 private:
 	UPROPERTY()
 	UDialogHandler* ActiveDialog = nullptr;
-	
-	UPROPERTY()
-	const UDialogDataAsset* DialogsAsset;
 
 public:
 	// Bind to this in your dialog Widget to react to each new line without polling.
@@ -58,11 +53,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Add Gameplay Tags"))
 	void AddGameplayTags(const TArray<FGameplayTag>& GameplayTags);
 
-	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Initialize Dialogs"))
-	void InitializeDialogs(const UDialogDataAsset* DataAsset);
-
 	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Start Dialog"))
-	void StartDialog(const FGameplayTag & DialogGameplayTag);
+	void StartDialog(UDialog* Dialog);
 
 	// Called by the UI when the player selects a response. Returns true if the dialog has ended.
 	UFUNCTION(BlueprintCallable, Category = "Dialog System", meta = (DisplayName = "Select Dialog Response"))
