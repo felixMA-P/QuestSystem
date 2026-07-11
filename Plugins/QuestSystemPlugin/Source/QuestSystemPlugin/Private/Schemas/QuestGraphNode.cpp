@@ -1,6 +1,7 @@
 #include "Schemas/QuestGraphNode.h"
 
 #include "QuestInfo.h"
+#include "Widgets/Colors/SColorPicker.h"
 #include "Framework/Commands/UIAction.h"
 #include "ScopedTransaction.h"
 #include "ToolMenu.h"
@@ -19,7 +20,6 @@ UQuestGraphNode::UQuestGraphNode() : UQuestGraphNodeBase()
 	 	FQuestOutput NewOutput;
 	 	NewOutput.Condition = UQuestCondition::StaticClass();
 	 	NewOutput.Text = FText::FromString("Output");
-	 	NewOutput.Color = GetBranchColor(QuestInfo->OutPuts.Num());
 	 	QuestInfo->OutPuts.Add(NewOutput);
 	 	SyncPinsWithOutputs();
 	 	GetGraph()->NotifyGraphChanged();
@@ -124,6 +124,31 @@ void UQuestGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeConte
 		FSlateIcon(TEXT("QuestSystemEditorStyle"), TEXT("QuestEditor.NodeDeleteNodeIcon")),
 		FUIAction( DeleteNodeDelegate )
 		);
+
+	if (Context->Pin && Context->Pin->Direction == EEdGraphPinDirection::EGPD_Output)
+	{
+		TArray<UEdGraphPin*> OutPutPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
+		{
+			return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
+		});
+
+		const int32 PinIndex = OutPutPins.IndexOfByKey(Context->Pin);
+
+		if (QuestInfo && QuestInfo->OutPuts.IsValidIndex(PinIndex))
+		{
+			FToolMenuSection& PinSection = Menu->AddSection(TEXT("PinSectionName"), FText::FromString("Pin Actions"));
+
+			UQuestGraphNode* MutableThis = const_cast<UQuestGraphNode*>(this);
+
+			PinSection.AddMenuEntry(
+				TEXT("SetPinColorEntry"),
+				FText::FromString("Set Pin Color"),
+				FText::FromString("Choose the color for this output pin and its wire"),
+				FSlateIcon(TEXT("QuestSystemEditorStyle"), TEXT("QuestEditor.NodeAddPinIcon")),
+				FUIAction(FExecuteAction::CreateUObject(MutableThis, &UQuestGraphNode::OpenPinColorPicker, PinIndex))
+				);
+		}
+	}
 }
 
 UEdGraphPin* UQuestGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name)
@@ -157,7 +182,8 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	}
 	while (NumOfOutputPins > NumGraphNodePins)
 	{
-		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(QuestInfo->OutPuts[NumGraphNodePins].Text.ToString()));
+		UEdGraphPin* NewPin = CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(QuestInfo->OutPuts[NumGraphNodePins].Text.ToString()));
+		TagPinWithBranchColor(NewPin, GetBranchColor(NumGraphNodePins));
 		NumGraphNodePins++;
 	}
 
@@ -171,7 +197,6 @@ void UQuestGraphNode::SyncPinsWithOutputs()
 	for (auto OutPutPin : OutPutPins)
 	{
 		OutPutPin->PinName = FName(QuestInfo->OutPuts[Index].Text.ToString());
-		TagPinWithBranchColor(OutPutPin, QuestInfo->OutPuts[Index].Color);
 		Index++;
 	}
 
@@ -196,5 +221,47 @@ FText UQuestGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 		return FText::FromString("Set up the title");
 
 	return QuestInfo->Title;
+}
+
+void UQuestGraphNode::OpenPinColorPicker(int32 OutputIndex)
+{
+	TArray<UEdGraphPin*> OutPutPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
+	{
+		return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
+	});
+
+	if (!OutPutPins.IsValidIndex(OutputIndex)) return;
+
+	FLinearColor CurrentColor;
+	if (!TryGetBranchColor(OutPutPins[OutputIndex]->PinType, CurrentColor))
+	{
+		CurrentColor = GetBranchColor(OutputIndex);
+	}
+
+	FColorPickerArgs PickerArgs;
+	PickerArgs.bUseAlpha = false;
+	PickerArgs.bOnlyRefreshOnMouseUp = false;
+	PickerArgs.bOnlyRefreshOnOk = false;
+	PickerArgs.InitialColor = CurrentColor;
+	PickerArgs.OnColorCommitted = FOnLinearColorValueChanged::CreateUObject(this, &UQuestGraphNode::HandlePinColorPicked, OutputIndex);
+
+	OpenColorPicker(PickerArgs);
+}
+
+void UQuestGraphNode::HandlePinColorPicked(FLinearColor NewColor, int32 OutputIndex)
+{
+	TArray<UEdGraphPin*> OutPutPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
+	{
+		return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
+	});
+
+	if (!OutPutPins.IsValidIndex(OutputIndex)) return;
+
+	const FScopedTransaction Transaction(FText::FromString("Set Quest Pin Color"));
+
+	Modify();
+	TagPinWithBranchColor(OutPutPins[OutputIndex], NewColor);
+
+	GetGraph()->NotifyGraphChanged();
 }
 

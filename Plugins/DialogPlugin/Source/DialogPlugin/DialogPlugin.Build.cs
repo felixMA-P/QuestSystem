@@ -25,7 +25,8 @@ public class DialogPlugin : ModuleRules
 				"PropertyEditor",
 				"Projects",
 				"ToolMenus",
-				"GraphEditor"
+				"GraphEditor",
+				"AppFramework"
 			}
 		);
 	}

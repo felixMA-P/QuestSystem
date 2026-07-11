@@ -21,6 +21,10 @@ public:
 
 	// Positions of any reroute (knot) nodes bent into the wire between this pin and Connection, editor-visual only.
 	UPROPERTY() TArray<FVector2D> ReroutePoints;
+
+	// Color of this pin/wire in the graph editor, editor-visual only. Meaningful for output pins;
+	// input pins mirror whatever they're connected to (see UDialogGraphNodeBase::SyncInputPinColors).
+	UPROPERTY() FLinearColor Color = FLinearColor::White;
 };
 
 UCLASS(BlueprintType)

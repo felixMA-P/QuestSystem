@@ -35,7 +35,13 @@ public:
 
 	virtual void OnPropertiesChanged() override { SyncPinsWithOutputs(); }
 
+	// Opens the native color picker for Outputs[OutputIndex] and applies the chosen color live.
+	void OpenPinColorPicker(int32 OutputIndex);
+
 private:
+
+	void HandlePinColorPicked(FLinearColor NewColor, int32 OutputIndex);
+
 	TDelegate<void(), FDefaultDelegateUserPolicy> AddNewOutputPinDelegate;
 	TDelegate<void(), FDefaultDelegateUserPolicy> AddNewInputPinDelegate;
 	TDelegate<void(), FDefaultDelegateUserPolicy> DeleteOutputPinDelegate;

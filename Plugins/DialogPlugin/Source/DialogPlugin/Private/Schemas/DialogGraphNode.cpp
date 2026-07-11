@@ -1,6 +1,7 @@
 #include "Schemas/DialogGraphNode.h"
 
 #include "DialogLineInfo.h"
+#include "Widgets/Colors/SColorPicker.h"
 #include "Framework/Commands/UIAction.h"
 #include "ScopedTransaction.h"
 #include "ToolMenu.h"
@@ -57,7 +58,6 @@ UDialogGraphNode::UDialogGraphNode() : UDialogGraphNodeBase()
 
 		FDialogOutput NewOutput;
 		NewOutput.ResponseText = FText::FromString(TEXT("Response"));
-		NewOutput.Color = GetBranchColor(DialogInfo->Outputs.Num());
 		DialogInfo->Outputs.Add(NewOutput);
 		SyncPinsWithOutputs();
 		GetGraph()->NotifyGraphChanged();
@@ -169,6 +169,31 @@ void UDialogGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeCont
 		FSlateIcon(TEXT("DialogSystemEditorStyle"), TEXT("DialogEditor.NodeDeleteNodeIcon")),
 		FUIAction(DeleteNodeDelegate)
 	);
+
+	if (Context->Pin && Context->Pin->Direction == EEdGraphPinDirection::EGPD_Output)
+	{
+		TArray<UEdGraphPin*> OutputPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
+		{
+			return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
+		});
+
+		const int32 PinIndex = OutputPins.IndexOfByKey(Context->Pin);
+
+		if (DialogInfo && DialogInfo->Outputs.IsValidIndex(PinIndex))
+		{
+			FToolMenuSection& PinSection = Menu->AddSection(TEXT("PinSectionName"), FText::FromString("Pin Actions"));
+
+			UDialogGraphNode* MutableThis = const_cast<UDialogGraphNode*>(this);
+
+			PinSection.AddMenuEntry(
+				TEXT("SetPinColorEntry"),
+				FText::FromString("Set Pin Color"),
+				FText::FromString("Choose the color for this output pin and its wire"),
+				FSlateIcon(TEXT("DialogSystemEditorStyle"), TEXT("DialogEditor.NodeAddPinIcon")),
+				FUIAction(FExecuteAction::CreateUObject(MutableThis, &UDialogGraphNode::OpenPinColorPicker, PinIndex))
+			);
+		}
+	}
 }
 
 UEdGraphPin* UDialogGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name)
@@ -202,7 +227,8 @@ void UDialogGraphNode::SyncPinsWithOutputs()
 	}
 	while (NumOutputsInData > NumGraphPins)
 	{
-		CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(FString::Printf(TEXT("Output_%d"), NumGraphPins)));
+		UEdGraphPin* NewPin = CreateCustomPin(EEdGraphPinDirection::EGPD_Output, FName(FString::Printf(TEXT("Output_%d"), NumGraphPins)));
+		TagPinWithBranchColor(NewPin, GetBranchColor(NumGraphPins));
 		NumGraphPins++;
 	}
 
@@ -215,7 +241,6 @@ void UDialogGraphNode::SyncPinsWithOutputs()
 	for (int32 Index = 0; Index < OutputPins.Num(); ++Index)
 	{
 		OutputPins[Index]->PinFriendlyName = DialogInfo->Outputs[Index].ResponseText;
-		TagPinWithBranchColor(OutputPins[Index], DialogInfo->Outputs[Index].Color);
 	}
 }
 
@@ -238,4 +263,46 @@ FText UDialogGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 		return FText::FromString("Set up the dialog text");
 
 	return WrapTextAtLength(DialogInfo->DialogResume, DialogInfo->DialogText, DialogInfo->GraphPreviewWrapLength);
+}
+
+void UDialogGraphNode::OpenPinColorPicker(int32 OutputIndex)
+{
+	TArray<UEdGraphPin*> OutputPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
+	{
+		return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
+	});
+
+	if (!OutputPins.IsValidIndex(OutputIndex)) return;
+
+	FLinearColor CurrentColor;
+	if (!TryGetBranchColor(OutputPins[OutputIndex]->PinType, CurrentColor))
+	{
+		CurrentColor = GetBranchColor(OutputIndex);
+	}
+
+	FColorPickerArgs PickerArgs;
+	PickerArgs.bUseAlpha = false;
+	PickerArgs.bOnlyRefreshOnMouseUp = false;
+	PickerArgs.bOnlyRefreshOnOk = false;
+	PickerArgs.InitialColor = CurrentColor;
+	PickerArgs.OnColorCommitted = FOnLinearColorValueChanged::CreateUObject(this, &UDialogGraphNode::HandlePinColorPicked, OutputIndex);
+
+	OpenColorPicker(PickerArgs);
+}
+
+void UDialogGraphNode::HandlePinColorPicked(FLinearColor NewColor, int32 OutputIndex)
+{
+	TArray<UEdGraphPin*> OutputPins = GetAllPins().FilterByPredicate([](UEdGraphPin* Pin)
+	{
+		return Pin->Direction == EEdGraphPinDirection::EGPD_Output;
+	});
+
+	if (!OutputPins.IsValidIndex(OutputIndex)) return;
+
+	const FScopedTransaction Transaction(FText::FromString("Set Dialog Pin Color"));
+
+	Modify();
+	TagPinWithBranchColor(OutputPins[OutputIndex], NewColor);
+
+	GetGraph()->NotifyGraphChanged();
 }

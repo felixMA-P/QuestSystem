@@ -19,10 +19,6 @@ struct FDialogOutput
 
 	UPROPERTY(EditAnywhere, Instanced, Category = "DialogOutput")
 	UDialogEvent* Event = nullptr;
-
-	// Color of this output's pin/wire in the graph editor. Auto-assigned when the output is added; freely overridable.
-	UPROPERTY(EditAnywhere, Category = "DialogOutput")
-	FLinearColor Color = FLinearColor::White;
 };
 
 UCLASS(BlueprintType)

@@ -46,7 +46,8 @@ public class QuestSystemPlugin : ModuleRules
 				"PropertyEditor",
 				"Projects",
 				"ToolMenus",
-				"GraphEditor"
+				"GraphEditor",
+				"AppFramework"
 				// ... add private dependencies that you statically link with here ...
 			}
 			);

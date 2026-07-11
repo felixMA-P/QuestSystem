@@ -179,6 +179,12 @@ void FDialogAssetEditorApp::UpdateWorkingAssetFromGraph()
 
 			if (UiPin->Direction == EEdGraphPinDirection::EGPD_Output)
 			{
+				FLinearColor PinColor;
+				if (UDialogGraphNodeBase::TryGetBranchColor(UiPin->PinType, PinColor))
+				{
+					RuntimePin->Color = PinColor;
+				}
+
 				TArray<FVector2D> ReroutePoints;
 				TSet<UEdGraphNode*> Visited;
 				if (UEdGraphPin* RealDest = ResolveRealDialogPin(UiPin, ReroutePoints, Visited))
@@ -260,25 +266,12 @@ void FDialogAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 			IdToPinMap.Add(Pin->PinId, UiPin);
 		}
 
-		UDialogLineInfo* NodeDialogInfo = Cast<UDialogLineInfo>(NewNode->GetDialogInfoBase());
-		int32 OutputPinIndex = 0;
 		for (UDialogRuntimePin* Pin : RuntimeNode->OutputPins)
 		{
 			UEdGraphPin* UiPin = NewNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, Pin->PinName);
 			UiPin->PinId = Pin->PinId;
 
-			// DialogNode outputs use their saved color (also re-tagged below by OnPropertiesChanged ->
-			// SyncPinsWithOutputs, harmless); the Start node has no backing Outputs entry, so its single
-			// output always falls back to the default palette's first color.
-			if (NodeDialogInfo && NodeDialogInfo->Outputs.IsValidIndex(OutputPinIndex))
-			{
-				UDialogGraphNodeBase::TagPinWithBranchColor(UiPin, NodeDialogInfo->Outputs[OutputPinIndex].Color);
-			}
-			else
-			{
-				UDialogGraphNodeBase::TagPinWithBranchColor(UiPin, UDialogGraphNodeBase::GetBranchColor(OutputPinIndex));
-			}
-			OutputPinIndex++;
+			UDialogGraphNodeBase::TagPinWithBranchColor(UiPin, Pin->Color);
 
 			if (Pin->Connection != nullptr)
 				Connections.Add({ Pin->PinId, Pin->Connection->PinId, Pin->ReroutePoints });

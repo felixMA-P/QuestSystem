@@ -29,10 +29,6 @@ struct FQuestOutput
 
 	UPROPERTY(EditAnywhere, Category = "QuestOutput")
 	TSubclassOf<UQuestEvent> Event;
-
-	// Color of this output's pin/wire in the graph editor. Auto-assigned when the output is added; freely overridable.
-	UPROPERTY(EditAnywhere, Category = "QuestOutput")
-	FLinearColor Color = FLinearColor::White;
 };
 
 UCLASS(BlueprintType)

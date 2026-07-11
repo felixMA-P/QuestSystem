@@ -185,6 +185,12 @@ void FChainQuestAssetEditorApp::UpdateWorkingAssetFromGraph()
 
 			if (UiPin->Direction == EEdGraphPinDirection::EGPD_Output)
 			{
+				FLinearColor PinColor;
+				if (UQuestGraphNodeBase::TryGetBranchColor(UiPin->PinType, PinColor))
+				{
+					RuntimePin->Color = PinColor;
+				}
+
 				TArray<FVector2D> ReroutePoints;
 				TSet<UEdGraphNode*> Visited;
 				if (UEdGraphPin* RealDest = ResolveRealQuestPin(UiPin, ReroutePoints, Visited))
@@ -273,24 +279,12 @@ void FChainQuestAssetEditorApp::UpdateEditorGraphFromWorkingAsset()
 			IdToPinMap.Add(Pin->PinId, UiPin);
 		}
 
-		UQuestInfo* NodeQuestInfo = Cast<UQuestInfo>(NewNode->GetQuestInfoBase());
-		int32 OutputPinIndex = 0;
 		for (UQuestRuntimePin* Pin : RuntimeNode->OutputPins)
 		{
 			UEdGraphPin* UiPin = NewNode->CreateCustomPin(EEdGraphPinDirection::EGPD_Output, Pin->PinName);
 			UiPin->PinId = Pin->PinId;
 
-			// Regular quest-node outputs use their saved color; the Start node has no backing OutPuts entry, so its
-			// single output always falls back to the default palette's first color.
-			if (NodeQuestInfo && NodeQuestInfo->OutPuts.IsValidIndex(OutputPinIndex))
-			{
-				UQuestGraphNodeBase::TagPinWithBranchColor(UiPin, NodeQuestInfo->OutPuts[OutputPinIndex].Color);
-			}
-			else
-			{
-				UQuestGraphNodeBase::TagPinWithBranchColor(UiPin, UQuestGraphNodeBase::GetBranchColor(OutputPinIndex));
-			}
-			OutputPinIndex++;
+			UQuestGraphNodeBase::TagPinWithBranchColor(UiPin, Pin->Color);
 
 			if (Pin->Connection != nullptr) {
 				Connections.Add({ Pin->PinId, Pin->Connection->PinId, Pin->ReroutePoints });
