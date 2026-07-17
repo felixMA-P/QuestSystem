@@ -1,7 +1,10 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "DialogAssetAppMode.h"
 #include "DialogAssetEditorApp.h"
 #include "DialogAssetPrimaryTabFactory.h"
 #include "DialogAssetPropertiesTabFactory.h"
+#include "Misc/EngineVersionComparison.h"
 
 FDialogAssetAppMode::FDialogAssetAppMode(TSharedPtr<FDialogAssetEditorApp> InApp) : FApplicationMode(InApp->AppModeName)
 {
@@ -32,7 +35,12 @@ void FDialogAssetAppMode::RegisterTabFactories(TSharedPtr<FTabManager> InTabMana
 {
 	TSharedPtr<FDialogAssetEditorApp> LocalApp = App.Pin();
 	LocalApp->PushTabFactories(TabSet);
+#if UE_VERSION_OLDER_THAN(5, 8, 0)
 	FApplicationMode::RegisterTabFactories(InTabManager);
+#else
+	// 5.8 made the base method private; this is the sanctioned replacement.
+	RegisterTabFactoriesWithAppAndManager(LocalApp.Get(), InTabManager.ToSharedRef());
+#endif
 }
 
 void FDialogAssetAppMode::PreDeactivateMode()

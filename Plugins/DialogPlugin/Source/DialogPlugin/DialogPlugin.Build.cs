@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 using UnrealBuildTool;
 
 public class DialogPlugin : ModuleRules

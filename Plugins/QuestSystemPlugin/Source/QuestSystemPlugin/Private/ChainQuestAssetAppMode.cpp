@@ -1,7 +1,10 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "ChainQuestAssetAppMode.h"
 #include "ChainQuestAssetEditorApp.h"
 #include "ChainQuestAssetPrimaryTabFactory.h"
 #include "ChainQuestAssetPropertiesTabFactory.h"
+#include "Misc/EngineVersionComparison.h"
 
 FChainQuestAssetAppMode::FChainQuestAssetAppMode(TSharedPtr<FChainQuestAssetEditorApp> InApp) : FApplicationMode(InApp->AppModeName)
 {
@@ -33,7 +36,12 @@ void FChainQuestAssetAppMode::RegisterTabFactories(TSharedPtr<FTabManager> InTab
 {
 	TSharedPtr<FChainQuestAssetEditorApp> LocalApp = App.Pin();
 	LocalApp->PushTabFactories(TabSet);
+#if UE_VERSION_OLDER_THAN(5, 8, 0)
 	FApplicationMode::RegisterTabFactories(InTabManager);
+#else
+	// 5.8 made the base method private; this is the sanctioned replacement.
+	RegisterTabFactoriesWithAppAndManager(LocalApp.Get(), InTabManager.ToSharedRef());
+#endif
 }
 
 void FChainQuestAssetAppMode::PreDeactivateMode()

@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "Schemas/QuestStartGraphNode.h"
 
 UEdGraphPin* UQuestStartGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name)

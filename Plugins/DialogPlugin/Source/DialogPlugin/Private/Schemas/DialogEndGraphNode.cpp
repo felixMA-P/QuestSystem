@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "Schemas/DialogEndGraphNode.h"
 
 #include "Framework/Commands/UIAction.h"

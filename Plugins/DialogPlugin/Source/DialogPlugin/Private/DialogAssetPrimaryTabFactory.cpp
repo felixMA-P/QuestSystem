@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "DialogAssetPrimaryTabFactory.h"
 #include "DialogAssetEditorApp.h"
 #include "GraphEditor.h"

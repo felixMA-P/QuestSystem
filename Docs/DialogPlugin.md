@@ -10,30 +10,19 @@ Single-active-dialog system with a visual graph editor. Mirrors the QuestSystemP
 ## Data Model
 
 ```
-UDialogDataAsset
-└── Dialogs  TMap<FGameplayTag, UDialog*>   ← Tag-keyed dialog lookup
-    └── UDialog                             ← One dialog tree asset
-        ├── Title
-        ├── StartCondition                  ← TSubclassOf<UDialogCondition>; nil = always starts
-        └── UDialogGraph
-            └── UDialogRuntimeNode[]
-                ├── UDialogLineInfo         ← A spoken line with player responses
-                │   ├── Speaker             ← FGameplayTag identifying the speaker
-                │   ├── DialogText          ← The line to display
-                │   └── Outputs[]           ← Array of FDialogOutput (response text + event)
-                └── UDialogEndInfo          ← Terminal node
-                    ├── Title
-                    ├── EndEvent            ← TSubclassOf<UDialogEvent>
-                    └── NextDialog          ← Optional UDialog* to chain into
-```
-
-### UDialogDataAsset
-
-Data asset loaded into `UDialogWorldSubsystem`. Maps `FGameplayTag → UDialog*` so dialogs are started by tag rather than direct object reference.
-
-```cpp
-UPROPERTY(EditAnywhere, Category = "Dialog System")
-TMap<FGameplayTag, UDialog*> Dialogs;
+UDialog                                     ← One dialog tree asset
+├── Title
+├── StartCondition                          ← TSubclassOf<UDialogCondition>; nil = always starts
+└── UDialogGraph
+    └── UDialogRuntimeNode[]
+        ├── UDialogLineInfo                 ← A spoken line with player responses
+        │   ├── Speaker                     ← FGameplayTag identifying the speaker
+        │   ├── DialogText                  ← The line to display
+        │   └── Outputs[]                   ← Array of FDialogOutput (response text + event)
+        └── UDialogEndInfo                  ← Terminal node
+            ├── Title
+            ├── EndEvent                    ← TSubclassOf<UDialogEvent>
+            └── NextDialog                  ← Optional UDialog* to chain into
 ```
 
 ### UDialog
@@ -97,8 +86,7 @@ Bind these in your UI Blueprint or widget:
 
 | Function | Description |
 |---|---|
-| `InitializeDialogs(DataAsset)` | Loads the dialog data asset into the subsystem |
-| `StartDialog(GameplayTag)` | Starts the dialog mapped to the given tag (checks `StartCondition` first) |
+| `StartDialog(Dialog)` | Starts the given `UDialog` asset (checks `StartCondition` first) |
 | `SelectDialogResponse(ResponseIndex)` | Called by UI when player picks a response; returns `true` if dialog ended |
 | `GetCurrentDialogLine()` | Returns the current `UDialogLineInfo*` for display |
 | `AddGameplayTags(Tags)` | Adds tags to `DialogGameplayTagsContainer` for use in conditions |

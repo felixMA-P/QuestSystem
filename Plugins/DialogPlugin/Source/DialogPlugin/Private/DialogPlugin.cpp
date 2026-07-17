@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "DialogPlugin.h"
 #include "DialogAssetAction.h"
 #include "IAssetTools.h"
@@ -79,7 +81,7 @@ void FDialogPluginModule::StartupModule()
 	TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin("DialogPlugin");
 	if (Plugin.IsValid())
 	{
-		StyleSet->SetContentRoot(Plugin->GetContentDir());
+		StyleSet->SetContentRoot(Plugin->GetBaseDir() / TEXT("Resources"));
 	}
 
 	FSlateImageBrush* ThumbnailBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("DialogIcon"),          TEXT(".png")), FVector2D(120.f, 120.f));

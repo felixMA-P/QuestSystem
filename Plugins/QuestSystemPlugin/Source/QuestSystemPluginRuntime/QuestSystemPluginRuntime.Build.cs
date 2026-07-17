@@ -1,4 +1,6 @@
-﻿using UnrealBuildTool;
+﻿// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
+using UnrealBuildTool;
 
 public class QuestSystemPluginRuntime : ModuleRules
 {

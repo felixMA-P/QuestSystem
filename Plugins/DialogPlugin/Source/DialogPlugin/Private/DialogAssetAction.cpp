@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "DialogAssetAction.h"
 #include "Dialog.h"
 #include "DialogAssetEditorApp.h"

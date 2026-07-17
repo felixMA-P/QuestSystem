@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "Schemas/DialogStartGraphNode.h"
 
 UEdGraphPin* UDialogStartGraphNode::CreateCustomPin(EEdGraphPinDirection Direction, const FName& Name)

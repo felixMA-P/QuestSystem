@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"

@@ -34,13 +34,10 @@ QS->CheckOnGoingQuestConditions();
 // 1. Get the subsystem
 UDialogWorldSubsystem* DS = GetWorld()->GetSubsystem<UDialogWorldSubsystem>();
 
-// 2. Load the data asset
-DS->InitializeDialogs(MyDialogDataAsset);
+// 2. Start a dialog (its optional StartCondition is checked first)
+DS->StartDialog(MyDialogAsset);
 
-// 3. Start a dialog by gameplay tag
-DS->StartDialog(Tag_NPC_Merchant_Greeting);
-
-// 4. The UI handles the rest via OnDialogLineChanged / SelectDialogResponse
+// 3. The UI handles the rest via OnDialogLineChanged / SelectDialogResponse
 ```
 
 ## Build

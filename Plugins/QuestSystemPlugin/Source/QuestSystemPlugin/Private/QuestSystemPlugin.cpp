@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
 
 #include "QuestSystemPlugin.h"
 #include "ChainQuestAssetAction.h"
@@ -100,15 +100,15 @@ void FQuestSystemPluginModule::StartupModule()
 	// Set up the style set
 	StyleSet = MakeShareable(new FSlateStyleSet(TEXT("QuestSystemEditorStyle")));
 	TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin("QuestSystemPlugin");
-	FString ContentDir = Plugin->GetContentDir();
-	StyleSet->SetContentRoot(ContentDir);
+	FString ResourcesDir = Plugin->GetBaseDir() / TEXT("Resources");
+	StyleSet->SetContentRoot(ResourcesDir);
 
 	// Create the brushes for the different uses
 	FSlateImageBrush* ThumbnailBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("QuestIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
 	FSlateImageBrush* IconBrush = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("QuestIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
 	FSlateImageBrush* NodeAddPinIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeAddPinIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
-	FSlateImageBrush* NodeDeletePinIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeDeleteNodeIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
-	FSlateImageBrush* NodeDeleteNodeIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeDeletePinIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
+	FSlateImageBrush* NodeDeletePinIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeDeletePinIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
+	FSlateImageBrush* NodeDeleteNodeIcon = new FSlateImageBrush(StyleSet->RootToContentDir(TEXT("NodeDeleteNodeIcon"), TEXT(".png")), FVector2D(120.f, 120.f));
 
 	//Set up the brushes in the style set
 	StyleSet->Set(TEXT("ClassThumbnail.ChainQuest"), ThumbnailBrush);

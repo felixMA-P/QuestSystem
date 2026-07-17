@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "ChainQuestAssetEditorApp.h"
 #include "ChainQuest.h"
 #include "ChainQuestAssetAppMode.h"

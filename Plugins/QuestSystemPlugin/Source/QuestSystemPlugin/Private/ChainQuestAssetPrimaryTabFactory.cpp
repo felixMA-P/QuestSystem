@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "ChainQuestAssetPrimaryTabFactory.h"
 #include "ChainQuestAssetEditorApp.h"
 #include "ChainQuest.h"
