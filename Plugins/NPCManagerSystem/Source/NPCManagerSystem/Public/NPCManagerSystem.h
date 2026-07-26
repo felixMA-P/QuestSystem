@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FNPCManageSystemModule : public IModuleInterface
+class FNPCManagerSystemModule : public IModuleInterface
 {
 public:
 

@@ -17,7 +17,7 @@ class ANPC;
  * Felix Martin Arroyo
  */
 UCLASS(Blueprintable, BlueprintType)
-class NPCMANAGESYSTEM_API UNpcManagerSubsystem : public UWorldSubsystem
+class NPCMANAGERSYSTEM_API UNpcManagerSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
@@ -25,20 +25,20 @@ public:
 
 	UNpcManagerSubsystem();
 
-	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	void AddNPC(AActor* NPC);
 
-	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	void RemoveNPC(const FGameplayTag NameTag);
 
-	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	AActor* GetNPC(const FGameplayTag NameTag);
 
-	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	void MoveNPC(const FGameplayTag NameTag, const FVector& Location);
 
 	// Looks up NPCDataTable using the tag as row name. Returns false if not found.
-	UFUNCTION(BlueprintCallable, Category = "NPCManageSystem")
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	bool GetNPCInfo(const FGameplayTag& Tag, FNPCInfoRow& OutInfo);
 
 private:

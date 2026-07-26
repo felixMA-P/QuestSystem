@@ -10,7 +10,7 @@
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class NPCMANAGESYSTEM_API UNPCSystemComponent : public UActorComponent
+class NPCMANAGERSYSTEM_API UNPCSystemComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

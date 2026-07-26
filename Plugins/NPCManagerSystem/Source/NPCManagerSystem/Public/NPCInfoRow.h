@@ -9,7 +9,7 @@ class USkeletalMesh;
 class UTexture2D;
 
 USTRUCT(BlueprintType)
-struct NPCMANAGESYSTEM_API FNPCInfoRow : public FTableRowBase
+struct NPCMANAGERSYSTEM_API FNPCInfoRow : public FTableRowBase
 {
 	GENERATED_BODY()
 

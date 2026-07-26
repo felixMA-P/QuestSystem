@@ -26,8 +26,8 @@ Split into two modules:
 - **QuestSystemPluginRuntime** (`Source/QuestSystemPluginRuntime/`) — Runtime module. All gameplay-facing classes. Depends on `GameplayTags`.
 - **QuestSystemPlugin** (`Source/QuestSystemPlugin/`) — Editor-only module. Custom asset editor for `UChainQuest` assets.
 
-### NPCManageSystem (`Plugins/NPCManageSystem/`)
-Single runtime module. Manages NPCs and world entities via `FGameplayTag` keys.
+### NPCManagerSystem (`Plugins/NPCManagerSystem/`)
+Single runtime module. Manages NPCs via `FGameplayTag` keys.
 
 ### DialogPlugin (`Plugins/DialogPlugin/`)
 Newly added stub plugin. Minimal implementation.
@@ -83,7 +83,6 @@ Each `FQuestOutput` also carries a `ConditionTag` (`FGameplayTag`), used instead
 
 - `USystemFunctionHelper::GetQuestSystem(World)` → `UQuestWorldSubsystem*`
 - `UFunctionHelpers::GetNpcManager(World)` → `UNpcManagerSubsystem*`
-- `UFunctionHelpers::GetEntitiesManager(World)` → `UEntitiesSubsystem*`
 
 ## Custom Asset Editor (Editor Module)
 
@@ -99,13 +98,13 @@ Editor node hierarchy (all in `Source/QuestSystemPlugin/Public/Schemas/`):
 
 Graph schema: `UChainQuestGraphSchema` — allows only output→input connections; breaks existing connections on reconnect.
 
-## NPC and Entity Systems
+## NPC System
 
-Both subsystems auto-register actors on world initialization by scanning for their respective components:
-- **`UNpcManagerSubsystem`** — finds actors with `UNPCSystemComponent`; tag-keyed map of `AActor*`
-- **`UEntitiesSubsystem`** — finds actors with `UEntityComponent`; tag-keyed map of `AActor*`
+`UNpcManagerSubsystem` auto-registers actors on world initialization by scanning for `UNPCSystemComponent`, keeping a tag-keyed map of `AActor*`.
 
-To register an NPC or entity: add `UNPCSystemComponent` or `UEntityComponent` to the actor and set its `Tag` property. The subsystem populates automatically at world init; manual `AddNPC`/`AddItem` calls are also available.
+To register an NPC: add `UNPCSystemComponent` to the actor and set its `Tag` property. The subsystem populates automatically at world init and on actor spawn; manual `AddNPC` calls are also available.
+
+`AddNPC` also looks up the matching `FNPCInfoRow` (matched on the row's `Tag` field) in the subsystem's `NPCDataTable` and caches it on the component.
 
 ## Gameplay Tags
 

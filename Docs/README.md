@@ -7,7 +7,7 @@ Unreal Engine 5.5 project. All gameplay code lives in three plugins under `Plugi
 | Plugin | Module(s) | Purpose |
 |---|---|---|
 | [QuestSystemPlugin](QuestSystemPlugin.md) | Runtime + Editor | Chain-quest data model, runtime execution, custom asset editor |
-| [NPCManageSystem](NPCManageSystem.md) | Runtime | Tag-keyed NPC and world-entity registry |
+| [NPCManagerSystem](NPCManagerSystem.md) | Runtime | Tag-keyed NPC registry |
 | [DialogPlugin](DialogPlugin.md) | Runtime + Editor | Single-active-dialog system with Blueprint widget base |
 
 ## Quick Start

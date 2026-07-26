@@ -9,7 +9,7 @@
 
 
 UCLASS()
-class NPCMANAGESYSTEM_API UFunctionHelpers : public UBlueprintFunctionLibrary
+class NPCMANAGERSYSTEM_API UFunctionHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

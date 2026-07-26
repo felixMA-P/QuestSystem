@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class NPCManageSystem : ModuleRules
+public class NPCManagerSystem : ModuleRules
 {
-	public NPCManageSystem(ReadOnlyTargetRules Target) : base(Target)
+	public NPCManagerSystem(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		

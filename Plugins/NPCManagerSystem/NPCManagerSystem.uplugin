@@ -2,9 +2,9 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "SimpleNPCAndEntitiesSubsystemPlugin",
-	"Description": "A system that manages the NPCs and the entities, that let you store the entities and NPCs by a gameplay tag",
-	"Category": "NPC and Entities",
+	"FriendlyName": "NPC Manager System",
+	"Description": "A system that manages the NPCs, that let you store and look up NPC actors by a gameplay tag",
+	"Category": "NPC",
 	"CreatedBy": "Felix Martin Arroyo",
 	"CreatedByURL": "https://www.linkedin.com/in/felix-martín-arroyo-5a1755200/",
 	"DocsURL": "",
@@ -15,7 +15,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "NPCManageSystem",
+			"Name": "NPCManagerSystem",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"PlatformAllowList": "Win64"
