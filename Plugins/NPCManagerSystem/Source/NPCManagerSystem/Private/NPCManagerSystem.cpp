@@ -1,6 +1,9 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "NPCManagerSystem.h"
+#include "NPCManagerLog.h"
+
+DEFINE_LOG_CATEGORY(LogNPCManager);
 
 #define LOCTEXT_NAMESPACE "FNPCManagerSystemModule"
 

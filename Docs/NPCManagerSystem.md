@@ -67,6 +67,96 @@ Actors without a valid `Tag` are skipped, and logged as an error in editor build
 
 ---
 
+## Actions (Command Pattern)
+
+`UNPCAction` is a command run against one NPC. Subclass it in C++ (override `BeginAction`) or in Blueprint (implement the **Begin Action** event). One instance is created per invocation, so per-run state can live on the object.
+
+### Lifecycle
+
+| Member | Description |
+|---|---|
+| `TargetNPC` | `AActor*` the action operates on; valid before `BeginAction` runs |
+| `TargetTag` | Tag the target is registered under |
+| `BeginAction()` / `Begin Action` | Entry point. Start the work here |
+| `FinishAction()` | Call when done. Advances the NPC's queue. Ignored if already finished |
+| `AbortAction()` / `Abort Action` | Called instead of finishing when cancelled or on world teardown. Only for actions that had started |
+| `OnFinished` | `BlueprintAssignable`, fired on finish *or* abort |
+| `IsRunning()` | True between `Start` and completion |
+
+Actions are **not** ticked. For anything durational, start a `Delay`, a timer, or an async node in `BeginAction` and call `FinishAction` from its completion. `GetWorld()` is overridden so latent Blueprint nodes work, and the instance is kept alive by the subsystem until it finishes.
+
+> An action that never calls `FinishAction` stalls that NPC's queue permanently.
+
+### Queueing
+
+Each NPC has its own FIFO queue — one action runs at a time, the next starts when the current one finishes. `RunActionOnNPC` returns immediately; the action starts right away if that NPC is idle, otherwise it waits its turn.
+
+| Function | Description |
+|---|---|
+| `CreateNPCAction(ActionClass)` | Builds an action *without* queueing it, so its properties can be set first |
+| `QueueAction(NPCTag, Action)` | Queues an action built by `CreateNPCAction`; starts it if the NPC is idle |
+| `RunActionOnNPC(NPCTag, ActionClass)` | Create + queue in one call, for actions needing no configuration |
+| `RunActionOnActor(NPC, ActionClass)` | Same, resolving the tag from the actor's `UNPCSystemComponent` |
+| `CancelNPCActions(NPCTag)` | Aborts the running action and discards everything queued behind it |
+| `GetRunningAction(NPCTag)` | The action currently running on that NPC, or null |
+| `GetQueuedActionCount(NPCTag)` | How many are waiting behind the running one |
+
+Use `CreateNPCAction` + `QueueAction` whenever an action needs parameters — `RunActionOnNPC` starts the action immediately, leaving no window to configure it. Configure and queue within the same call stack; an action that has been created but not queued is not referenced by the subsystem and so is not protected from garbage collection.
+
+### UNPCMoveToPointAction
+
+Moves the NPC in a straight line from wherever it stands to `Destination`, driven by a repeating timer.
+
+| Property | Default | Description |
+|---|---|---|
+| `Destination` | `(0,0,0)` | World-space target |
+| `Speed` | `200.0` | Units per second; ignored when `Duration` is set |
+| `Duration` | `0.0` | Above zero, the trip takes exactly this long regardless of distance |
+| `bOrientToDirection` | `true` | Face the direction of travel when the move starts |
+| `bSweep` | `true` | Collide with blocking geometry instead of passing through |
+| `UpdateInterval` | `0.016` | Seconds between position updates |
+
+No NavMesh, `AIController` or `AIModule` dependency required — but it does not path around obstacles. With `bSweep` on it stops against blocking geometry, and the action still finishes on schedule, so the NPC may end up short of `Destination`.
+
+```cpp
+UNpcManagerSubsystem* NM = UFunctionHelpers::GetNpcManager(GetWorld());
+
+UNPCMoveToPointAction* Move =
+    Cast<UNPCMoveToPointAction>(NM->CreateNPCAction(UNPCMoveToPointAction::StaticClass()));
+
+Move->Destination = ForgeLocation;
+Move->Speed = 300.0f;
+
+NM->QueueAction(BlacksmithTag, Move);
+```
+
+Queues are cleaned up automatically: `RemoveNPC` cancels that NPC's actions, and `Deinitialize` aborts everything still in flight.
+
+### Example
+
+```cpp
+// Walk to the forge, then hammer — the second waits for the first.
+UNpcManagerSubsystem* NM = UFunctionHelpers::GetNpcManager(GetWorld());
+NM->RunActionOnNPC(BlacksmithTag, UMoveToForgeAction::StaticClass());
+NM->RunActionOnNPC(BlacksmithTag, UHammerAction::StaticClass());
+```
+
+```cpp
+// A durational C++ action
+void UMoveToForgeAction::BeginAction()
+{
+    TargetNPC->SetActorLocation(ForgeLocation);
+
+    FTimerHandle Handle;
+    GetWorld()->GetTimerManager().SetTimer(Handle,
+        FTimerDelegate::CreateUObject(this, &UMoveToForgeAction::FinishAction), 2.0f, false);
+}
+```
+
+Because an action that finishes synchronously inside `BeginAction` broadcasts `OnFinished` before `RunActionOnNPC` returns, prefer queue order over binding to `OnFinished` when chaining.
+
+---
+
 ## Blueprint Access
 
 ```cpp

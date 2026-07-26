@@ -106,6 +106,14 @@ To register an NPC: add `UNPCSystemComponent` to the actor and set its `Tag` pro
 
 `AddNPC` also looks up the matching `FNPCInfoRow` (matched on the row's `Tag` field) in the subsystem's `NPCDataTable` and caches it on the component.
 
+### NPC Actions
+
+`UNPCAction` is a Blueprint/C++-subclassable command run against one NPC (command pattern). Unlike `UQuestCondition`/`UQuestEvent`, actions are **instanced per invocation**, not CDO-executed — they hold per-run state (`TargetNPC`, `TargetTag`).
+
+Each NPC gets a FIFO queue (`UNpcManagerSubsystem::ActionQueues`, keyed by tag): one action runs at a time, the next starts when the current calls `FinishAction()`. Queue with `RunActionOnNPC(Tag, Class)` / `RunActionOnActor(Actor, Class)`.
+
+Actions are not ticked. Durational work starts a `Delay`/timer/async node in `BeginAction` and calls `FinishAction` on completion; `UNPCAction::GetWorld()` is overridden so latent Blueprint nodes work. `StartNextAction` guards against re-entry via `bAdvancingQueue`, since an action may finish synchronously inside `BeginAction` or queue further actions.
+
 ## Gameplay Tags
 
 Quest status tags registered natively via `FQuestTagsManager` singleton (initialized at plugin startup):
