@@ -65,7 +65,10 @@ public:
 
 	// Create + queue in one call, for actions that need no configuration.
 	// Returns the new instance, or null if the NPC or class is invalid.
-	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions", meta = (DeterminesOutputType = "ActionClass"))
+	// Hidden from the palette: the UK2Node_RunNPCAction node is the Blueprint entry point,
+	// since it can also expose the action class's Expose-on-Spawn properties as pins.
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions",
+		meta = (DeterminesOutputType = "ActionClass", BlueprintInternalUseOnly = "true"))
 	UNPCAction* RunActionOnNPC(const FGameplayTag NPCTag, TSubclassOf<UNPCAction> ActionClass);
 
 	// As RunActionOnNPC, resolving the tag from the actor's UNPCSystemComponent.

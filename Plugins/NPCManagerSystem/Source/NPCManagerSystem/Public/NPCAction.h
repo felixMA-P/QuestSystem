@@ -27,7 +27,9 @@ DECLARE_DELEGATE_OneParam(FNPCActionCompletedInternal, UNPCAction*);
  *
  * Felix Martin Arroyo
  */
-UCLASS(Abstract, Blueprintable, BlueprintType)
+// DontUseGenericSpawnObject keeps action classes out of the stock "Construct Object from Class"
+// node, which would build an action the subsystem never learns about.
+UCLASS(Abstract, Blueprintable, BlueprintType, meta = (DontUseGenericSpawnObject = "true"))
 class NPCMANAGERSYSTEM_API UNPCAction : public UObject
 {
 	GENERATED_BODY()
