@@ -19,7 +19,7 @@ Hot-reload is supported inside the editor for iterative C++ changes. Generate pr
 
 ## Plugin Architecture
 
-Three plugins under `Plugins/`:
+Four plugins under `Plugins/`:
 
 ### QuestSystemPlugin (`Plugins/QuestSystemPlugin/`)
 Split into two modules:
@@ -27,10 +27,15 @@ Split into two modules:
 - **QuestSystemPlugin** (`Source/QuestSystemPlugin/`) — Editor-only module. Custom asset editor for `UChainQuest` assets.
 
 ### NPCManagerSystem (`Plugins/NPCManagerSystem/`)
-Single runtime module. Manages NPCs via `FGameplayTag` keys.
+Single runtime module. Manages NPCs via `FGameplayTag` keys. (A `NPCManagerSystemEditor` module existed for the `UK2Node_RunNPCAction` Blueprint node; both were removed when actions moved to data assets.)
 
 ### DialogPlugin (`Plugins/DialogPlugin/`)
 Newly added stub plugin. Minimal implementation.
+
+### EventBusSystem (`Plugins/EventBusSystem/`)
+Two runtime modules:
+- **EventBusSystem** (`Source/EventBusSystem/`) — Core. Depends only on `Engine`, `GameplayTags`, `DeveloperSettings`, so it is usable standalone.
+- **EventBusBridges** (`Source/EventBusBridges/`) — Optional integration with the other three plugins. Its `Build.cs` probes for each sibling plugin folder and links it only when present, defining `WITH_EVENTBUS_QUESTSYSTEM` / `WITH_EVENTBUS_NPCMANAGER` / `WITH_EVENTBUS_DIALOG`.
 
 ## Core Quest System Architecture
 
@@ -110,9 +115,27 @@ To register an NPC: add `UNPCSystemComponent` to the actor and set its `Tag` pro
 
 `UNPCAction` is a Blueprint/C++-subclassable command run against one NPC (command pattern). Unlike `UQuestCondition`/`UQuestEvent`, actions are **instanced per invocation**, not CDO-executed — they hold per-run state (`TargetNPC`, `TargetTag`).
 
-Each NPC gets a FIFO queue (`UNpcManagerSubsystem::ActionQueues`, keyed by tag): one action runs at a time, the next starts when the current calls `FinishAction()`. Queue with `RunActionOnNPC(Tag, Class)` / `RunActionOnActor(Actor, Class)`.
+Actions are never run by class. `UNPCActionDataAsset` pairs a `TSubclassOf<UNPCAction> ActionClass` with `Defaults`, a `VisibleAnywhere, Instanced` instance of that class whose properties are the action's authored values. `PostEditChangeProperty` rebuilds `Defaults` whenever `ActionClass` changes, which is what makes the chosen subclass's variables appear in the asset. At runtime `InstantiateAction` duplicates `Defaults`, so each run gets a private copy. `UNPCAction` is `EditInlineNew` for this to work.
+
+Each NPC gets a FIFO queue (`UNpcManagerSubsystem::ActionQueues`, keyed by tag): one action runs at a time, the next starts when the current calls `FinishAction()`. Queue with `RunActionOnNPC(Tag, Asset)` / `RunActionOnActor(Actor, Asset)`, or the `RunSoftAction*` variants that take a `TSoftObjectPtr` and load on demand.
 
 Actions are not ticked. Durational work starts a `Delay`/timer/async node in `BeginAction` and calls `FinishAction` on completion; `UNPCAction::GetWorld()` is overridden so latent Blueprint nodes work. `StartNextAction` guards against re-entry via `bAdvancingQueue`, since an action may finish synchronously inside `BeginAction` or queue further actions.
+
+## Event Bus System
+
+`UEventBusSubsystem` (a `UWorldSubsystem`) is two layers that can each be used alone.
+
+**Layer 1 — pub/sub.** `PostEvent(FGameEvent)` sends a tagged event carrying `Instigator`, `Target`, `ContextTags`, a `TMap<FGameplayTag, double> EventFacts`, and an `FInstancedStruct Payload`. Listeners register per channel tag with `Exact` or `IncludeChildren` matching (parent-chain walk, as Lyra's message subsystem does). Blueprint access is `UEventListenerComponent` and the `Listen For Game Event` async node.
+
+**Layer 2 — rules.** `UEventRuleSet` assets hold `UEventRule` assets, which are bucketed by their `EventTag`. Per event: policy gate (ledger) → `Criteria` → `ContextQuery` → `CustomConditions`, then sort by `Priority` desc, `Specificity` desc (specificity = criteria + custom conditions + tag-query terms), weighted-random tie-break. The set's `SelectionMode` decides whether one rule wins (`BestMatch`) or all do (`AllMatching`). This is the rule-database pattern from Valve's dynamic dialog: a rule with no criteria is the fallback.
+
+**Responses.** `UEventResponse` is `Abstract, EditInlineNew, Blueprintable` and mirrors `UNPCAction` exactly — `BeginResponse`/`FinishResponse`, `GetWorld()` overridden for latent nodes, duplicated per firing from the authored template. Rules run them FIFO with a `bAdvancingRun` re-entrancy guard, the same shape as `UNpcManagerSubsystem::StartNextAction`.
+
+**Ledger.** `RuleRecords` (keyed by `UEventRule::RuleId`, an `FGuid` stamped into the asset) drives `Once` / `OncePerSubject` / `MaxCount` / `Cooldown`. `EventStats` answers `HasEventFired` / `GetEventCount` / `GetTimeSinceEvent`. `CaptureState()` / `RestoreState()` round-trip a plain `FEventBusSaveState`; the plugin ships no `USaveGame`. This is the only persistence anywhere in the repo.
+
+**Dispatch safety.** Events posted during dispatch are queued, not recursed; chains deeper than `MaxChainDepth` are dropped with an error. Listener buckets hold `TSharedPtr` entries and are tombstoned rather than removed, so a callback may register or unregister listeners.
+
+**Debugging.** `EventBus.Trace 1` logs every candidate rule and the exact reason it was rejected; also `EventBus.Post`, `EventBus.SetFact`, `EventBus.DumpFacts`, `EventBus.DumpLedger`, `EventBus.DumpRules`, `EventBus.History`, `EventBus.ResetLedger`.
 
 ## Gameplay Tags
 
@@ -123,3 +146,8 @@ Quest status tags registered natively via `FQuestTagsManager` singleton (initial
 - `Gameplay.QuestSystem.Quest.Status.Completed`
 
 The primary condition mechanism is `UQuestWorldSubsystem::QuestGameplayTagsContainer` — game systems add tags here to represent world state, and `UQuestCondition` subclasses query it.
+
+Event bus roots registered natively via `FEventBusTagsManager` (only the roots; project tags live under them):
+- `Gameplay.EventBusSystem.Event`
+- `Gameplay.EventBusSystem.Fact`
+- `Gameplay.EventBusSystem.State`

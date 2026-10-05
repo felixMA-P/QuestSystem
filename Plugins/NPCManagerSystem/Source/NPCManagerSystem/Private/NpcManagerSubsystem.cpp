@@ -4,10 +4,10 @@
 #include "NpcManagerSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "NPCAction.h"
+#include "NPCActionDataAsset.h"
 #include "NPCInfoRow.h"
 #include "NPCManagerLog.h"
 #include "NPCSystemComponent.h"
-#include "Misc/LowLevelTestAdapter.h"
 
 // Designer-populated DataTable shipped in the plugin's Content folder.
 static const TCHAR* NPCDataTablePath = TEXT("/NPCManagerSystem/DT_NPCInfo.DT_NPCInfo");
@@ -98,26 +98,22 @@ void UNpcManagerSubsystem::MoveNPC(const FGameplayTag NameTag, const FVector& Lo
 }
 
 
-UNPCAction* UNpcManagerSubsystem::CreateNPCAction(TSubclassOf<UNPCAction> ActionClass)
+UNPCAction* UNpcManagerSubsystem::CreateNPCAction(const UNPCActionDataAsset* ActionAsset)
 {
-	if (!ActionClass)
+	if (!ActionAsset)
 	{
-		UE_LOG(LogNPCManager, Warning, TEXT("CreateNPCAction: no action class given"));
+		UE_LOG(LogNPCManager, Warning, TEXT("CreateNPCAction: no action data asset given"));
 		return nullptr;
 	}
 
-	// NewObject on an abstract class logs an engine error but still hands back an object,
-	// which would then run the base class's empty BeginActionEvent and look like a no-op.
-	if (ActionClass->HasAnyClassFlags(CLASS_Abstract))
+	// The asset owns class validation and the copying of authored values; it logs its own reasons.
+	UNPCAction* Action = ActionAsset->InstantiateAction(this);
+
+	if (!Action)
 	{
-		UE_LOG(LogNPCManager, Error,
-			TEXT("CreateNPCAction: '%s' is abstract and cannot be instantiated. Pass a concrete subclass ")
-			TEXT("— a Blueprint deriving from NPCAction, not NPCAction itself."),
-			*ActionClass->GetName());
 		return nullptr;
 	}
 
-	UNPCAction* Action = NewObject<UNPCAction>(this, ActionClass);
 	Action->OnCompletedInternal.BindUObject(this, &UNpcManagerSubsystem::HandleActionCompleted);
 
 	return Action;
@@ -169,9 +165,9 @@ bool UNpcManagerSubsystem::QueueAction(const FGameplayTag NPCTag, UNPCAction* Ac
 	return true;
 }
 
-UNPCAction* UNpcManagerSubsystem::RunActionOnNPC(const FGameplayTag NPCTag, TSubclassOf<UNPCAction> ActionClass)
+UNPCAction* UNpcManagerSubsystem::RunActionOnNPC(const FGameplayTag NPCTag, const UNPCActionDataAsset* ActionAsset)
 {
-	UNPCAction* Action = CreateNPCAction(ActionClass);
+	UNPCAction* Action = CreateNPCAction(ActionAsset);
 
 	if (!Action)
 	{
@@ -181,7 +177,7 @@ UNPCAction* UNpcManagerSubsystem::RunActionOnNPC(const FGameplayTag NPCTag, TSub
 	return QueueAction(NPCTag, Action) ? Action : nullptr;
 }
 
-UNPCAction* UNpcManagerSubsystem::RunActionOnActor(AActor* NPC, TSubclassOf<UNPCAction> ActionClass)
+UNPCAction* UNpcManagerSubsystem::RunActionOnActor(AActor* NPC, const UNPCActionDataAsset* ActionAsset)
 {
 	if (!NPC)
 	{
@@ -198,7 +194,49 @@ UNPCAction* UNpcManagerSubsystem::RunActionOnActor(AActor* NPC, TSubclassOf<UNPC
 		return nullptr;
 	}
 
-	return RunActionOnNPC(Comp->Tag, ActionClass);
+	return RunActionOnNPC(Comp->Tag, ActionAsset);
+}
+
+UNPCAction* UNpcManagerSubsystem::RunSoftActionOnNPC(const FGameplayTag NPCTag, TSoftObjectPtr<UNPCActionDataAsset> ActionAsset)
+{
+	// A null soft pointer and one whose asset failed to load are different mistakes; the
+	// second is the one worth a message, since the reference looks fine in the editor.
+	if (ActionAsset.IsNull())
+	{
+		UE_LOG(LogNPCManager, Warning, TEXT("RunSoftActionOnNPC: no action data asset given"));
+		return nullptr;
+	}
+
+	const UNPCActionDataAsset* Loaded = ActionAsset.LoadSynchronous();
+
+	if (!Loaded)
+	{
+		UE_LOG(LogNPCManager, Warning, TEXT("RunSoftActionOnNPC: failed to load '%s'"),
+			*ActionAsset.ToString());
+		return nullptr;
+	}
+
+	return RunActionOnNPC(NPCTag, Loaded);
+}
+
+UNPCAction* UNpcManagerSubsystem::RunSoftActionOnActor(AActor* NPC, TSoftObjectPtr<UNPCActionDataAsset> ActionAsset)
+{
+	if (ActionAsset.IsNull())
+	{
+		UE_LOG(LogNPCManager, Warning, TEXT("RunSoftActionOnActor: no action data asset given"));
+		return nullptr;
+	}
+
+	const UNPCActionDataAsset* Loaded = ActionAsset.LoadSynchronous();
+
+	if (!Loaded)
+	{
+		UE_LOG(LogNPCManager, Warning, TEXT("RunSoftActionOnActor: failed to load '%s'"),
+			*ActionAsset.ToString());
+		return nullptr;
+	}
+
+	return RunActionOnActor(NPC, Loaded);
 }
 
 void UNpcManagerSubsystem::StartNextAction(const FGameplayTag& NPCTag)

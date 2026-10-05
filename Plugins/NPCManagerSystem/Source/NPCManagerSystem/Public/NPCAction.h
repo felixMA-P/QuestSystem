@@ -20,6 +20,11 @@ DECLARE_DELEGATE_OneParam(FNPCActionCompletedInternal, UNPCAction*);
  * Subclass in C++ (override BeginAction) or in Blueprint (implement the Begin Action event).
  * One instance is created per invocation, so per-run state can live on the object.
  *
+ * Declare the values the action needs as EditAnywhere properties (Instance Editable in
+ * Blueprint) and read them in BeginAction. They are authored per UNPCActionDataAsset rather
+ * than baked into the class, so one action subclass backs many differently-configured assets;
+ * the instance is a copy of that asset's Action Defaults, so writing to them is safe.
+ *
  * Durational actions: start the work in BeginAction — a Delay, a timer, an async node —
  * and call FinishAction when it is done. The instance is kept alive until then, and
  * GetWorld() is valid so latent Blueprint nodes work. An action that never calls
@@ -29,7 +34,9 @@ DECLARE_DELEGATE_OneParam(FNPCActionCompletedInternal, UNPCAction*);
  */
 // DontUseGenericSpawnObject keeps action classes out of the stock "Construct Object from Class"
 // node, which would build an action the subsystem never learns about.
-UCLASS(Abstract, Blueprintable, BlueprintType, meta = (DontUseGenericSpawnObject = "true"))
+// EditInlineNew lets UNPCActionDataAsset hold a configured instance of a subclass and edit its
+// variables inline, which is where an action's values are authored.
+UCLASS(Abstract, EditInlineNew, Blueprintable, BlueprintType, meta = (DontUseGenericSpawnObject = "true"))
 class NPCMANAGERSYSTEM_API UNPCAction : public UObject
 {
 	GENERATED_BODY()

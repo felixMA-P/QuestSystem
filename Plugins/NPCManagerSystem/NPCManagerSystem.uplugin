@@ -19,12 +19,6 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"PlatformAllowList": "Win64"
-		},
-		{
-			"Name": "NPCManagerSystemEditor",
-			"Type": "UncookedOnly",
-			"LoadingPhase": "Default",
-			"PlatformAllowList": "Win64"
 		}
 	]
 }

@@ -71,6 +71,8 @@ Actors without a valid `Tag` are skipped, and logged as an error in editor build
 
 `UNPCAction` is a command run against one NPC. Subclass it in C++ (override `BeginAction`) or in Blueprint (implement the **Begin Action** event). One instance is created per invocation, so per-run state can live on the object.
 
+Actions are never run by class. Every entry point takes a `UNPCActionDataAsset`, which names the class *and* carries the values it runs with — see [Configuring an action](#configuring-an-action-unpcactiondataasset).
+
 ### Lifecycle
 
 | Member | Description |
@@ -87,48 +89,51 @@ Actions are **not** ticked. For anything durational, start a `Delay`, a timer, o
 
 > An action that never calls `FinishAction` stalls that NPC's queue permanently.
 
+### Configuring an action: UNPCActionDataAsset
+
+A `UDataAsset` holding one configured action.
+
+| Property | Type | Description |
+|---|---|---|
+| `ActionClass` | `TSubclassOf<UNPCAction>` | The action to run |
+| `Defaults` ("Action Defaults") | `UNPCAction*` (`Instanced`) | The values it runs with — these are `ActionClass`'s own variables |
+
+Pick a class in **Action Class** and **Action Defaults** fills with that class's editable variables, Blueprint variables included as long as they are marked *Instance Editable*. `Defaults` is `VisibleAnywhere`, so the object itself cannot be swapped from the details panel — `ActionClass` is what chooses it — while its properties stay editable.
+
+Values therefore live in the asset, not baked into the action class, so one action class backs as many differently-configured assets as you need. At runtime the subsystem duplicates `Defaults`, so each run gets a private copy and nothing an action writes at runtime leaks back into the asset.
+
+To create one: **Content Browser → Miscellaneous → Data Asset → NPCActionDataAsset**.
+
+```cpp
+// Reading authored values inside the action.
+void UMoveToForgeAction::BeginAction()
+{
+    TargetNPC->SetActorLocation(Destination);   // Destination was set on the asset
+    FinishAction();
+}
+```
+
+> Changing `ActionClass` on an existing asset rebuilds `Defaults` from scratch — values authored for the previous class are gone. It is undoable.
+
 ### Queueing
 
 Each NPC has its own FIFO queue — one action runs at a time, the next starts when the current one finishes. `RunActionOnNPC` returns immediately; the action starts right away if that NPC is idle, otherwise it waits its turn.
 
 | Function | Description |
 |---|---|
-| `CreateNPCAction(ActionClass)` | Builds an action *without* queueing it, so its properties can be set first |
+| `CreateNPCAction(ActionAsset)` | Builds a configured action *without* queueing it, so the instance can be tweaked on top of the asset's values |
 | `QueueAction(NPCTag, Action)` | Queues an action built by `CreateNPCAction`; starts it if the NPC is idle |
-| `RunActionOnNPC(NPCTag, ActionClass)` | Create + queue in one call, for actions needing no configuration |
-| `RunActionOnActor(NPC, ActionClass)` | Same, resolving the tag from the actor's `UNPCSystemComponent` |
+| `RunActionOnNPC(NPCTag, ActionAsset)` | Create + queue in one call |
+| `RunActionOnActor(NPC, ActionAsset)` | Same, resolving the tag from the actor's `UNPCSystemComponent` |
+| `RunSoftActionOnNPC(NPCTag, ActionAsset)` | As above, taking a `TSoftObjectPtr` and loading it synchronously |
+| `RunSoftActionOnActor(NPC, ActionAsset)` | Soft-reference form of `RunActionOnActor` |
 | `CancelNPCActions(NPCTag)` | Aborts the running action and discards everything queued behind it |
 | `GetRunningAction(NPCTag)` | The action currently running on that NPC, or null |
 | `GetQueuedActionCount(NPCTag)` | How many are waiting behind the running one |
 
-Use `CreateNPCAction` + `QueueAction` whenever an action needs parameters — `RunActionOnNPC` starts the action immediately, leaving no window to configure it. Configure and queue within the same call stack; an action that has been created but not queued is not referenced by the subsystem and so is not protected from garbage collection.
+Most callers want `RunActionOnNPC` — the asset already carries the configuration, so there is nothing to set up afterwards. Reach for `CreateNPCAction` + `QueueAction` only to override an asset value for one particular run. Configure and queue within the same call stack; an action that has been created but not queued is not referenced by the subsystem and so is not protected from garbage collection.
 
-### UNPCMoveToPointAction
-
-Moves the NPC in a straight line from wherever it stands to `Destination`, driven by a repeating timer.
-
-| Property | Default | Description |
-|---|---|---|
-| `Destination` | `(0,0,0)` | World-space target |
-| `Speed` | `200.0` | Units per second; ignored when `Duration` is set |
-| `Duration` | `0.0` | Above zero, the trip takes exactly this long regardless of distance |
-| `bOrientToDirection` | `true` | Face the direction of travel when the move starts |
-| `bSweep` | `true` | Collide with blocking geometry instead of passing through |
-| `UpdateInterval` | `0.016` | Seconds between position updates |
-
-No NavMesh, `AIController` or `AIModule` dependency required — but it does not path around obstacles. With `bSweep` on it stops against blocking geometry, and the action still finishes on schedule, so the NPC may end up short of `Destination`.
-
-```cpp
-UNpcManagerSubsystem* NM = UFunctionHelpers::GetNpcManager(GetWorld());
-
-UNPCMoveToPointAction* Move =
-    Cast<UNPCMoveToPointAction>(NM->CreateNPCAction(UNPCMoveToPointAction::StaticClass()));
-
-Move->Destination = ForgeLocation;
-Move->Speed = 300.0f;
-
-NM->QueueAction(BlacksmithTag, Move);
-```
+The soft variants exist so a quest, dialog or level Blueprint can name an action without pulling it — and everything it references — into memory up front. They load synchronously, so keep them off the critical path when the asset is heavy.
 
 Queues are cleaned up automatically: `RemoveNPC` cancels that NPC's actions, and `Deinitialize` aborts everything still in flight.
 
@@ -137,23 +142,35 @@ Queues are cleaned up automatically: `RemoveNPC` cancels that NPC's actions, and
 ```cpp
 // Walk to the forge, then hammer — the second waits for the first.
 UNpcManagerSubsystem* NM = UFunctionHelpers::GetNpcManager(GetWorld());
-NM->RunActionOnNPC(BlacksmithTag, UMoveToForgeAction::StaticClass());
-NM->RunActionOnNPC(BlacksmithTag, UHammerAction::StaticClass());
+NM->RunActionOnNPC(BlacksmithTag, MoveToForgeAsset);
+NM->RunActionOnNPC(BlacksmithTag, HammerAsset);
 ```
+
+```cpp
+// Overriding one authored value for a single run.
+UNPCAction* Move = NM->CreateNPCAction(MoveToForgeAsset);
+
+if (UMoveToForgeAction* Typed = Cast<UMoveToForgeAction>(Move))
+{
+    Typed->Destination = AlternateForge;
+}
+
+NM->QueueAction(BlacksmithTag, Move);
+```
+
+Because an action that finishes synchronously inside `BeginAction` broadcasts `OnFinished` before `RunActionOnNPC` returns, prefer queue order over binding to `OnFinished` when chaining.
 
 ```cpp
 // A durational C++ action
 void UMoveToForgeAction::BeginAction()
 {
-    TargetNPC->SetActorLocation(ForgeLocation);
+    TargetNPC->SetActorLocation(Destination);
 
     FTimerHandle Handle;
     GetWorld()->GetTimerManager().SetTimer(Handle,
         FTimerDelegate::CreateUObject(this, &UMoveToForgeAction::FinishAction), 2.0f, false);
 }
 ```
-
-Because an action that finishes synchronously inside `BeginAction` broadcasts `OnFinished` before `RunActionOnNPC` returns, prefer queue order over binding to `OnFinished` when chaining.
 
 ---
 

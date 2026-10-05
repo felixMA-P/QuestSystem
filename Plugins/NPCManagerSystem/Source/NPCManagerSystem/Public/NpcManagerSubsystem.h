@@ -11,6 +11,7 @@
 
 class ANPC;
 class UNPCAction;
+class UNPCActionDataAsset;
 
 /** One NPC's action queue: the action currently running, plus those waiting their turn. */
 USTRUCT()
@@ -54,26 +55,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	bool GetNPCInfo(const FGameplayTag& Tag, FNPCInfoRow& OutInfo);
 
-	// Creates an action without queueing it, so its properties can be set first.
-	// Configure and queue it in the same call stack; an unqueued action is not kept alive.
-	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions", meta = (DeterminesOutputType = "ActionClass"))
-	UNPCAction* CreateNPCAction(TSubclassOf<UNPCAction> ActionClass);
+	// Builds a configured action from the asset without queueing it, so the instance can be
+	// tweaked on top of the asset's values first. Queue it in the same call stack;
+	// an unqueued action is not kept alive.
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions")
+	UNPCAction* CreateNPCAction(const UNPCActionDataAsset* ActionAsset);
 
 	// Queues an action built by CreateNPCAction, starting it if that NPC is idle.
 	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions")
 	bool QueueAction(const FGameplayTag NPCTag, UNPCAction* Action);
 
-	// Create + queue in one call, for actions that need no configuration.
-	// Returns the new instance, or null if the NPC or class is invalid.
-	// Hidden from the palette: the UK2Node_RunNPCAction node is the Blueprint entry point,
-	// since it can also expose the action class's Expose-on-Spawn properties as pins.
-	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions",
-		meta = (DeterminesOutputType = "ActionClass", BlueprintInternalUseOnly = "true"))
-	UNPCAction* RunActionOnNPC(const FGameplayTag NPCTag, TSubclassOf<UNPCAction> ActionClass);
+	// Create + queue in one call. Returns the new instance, or null if the NPC or asset is invalid.
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions")
+	UNPCAction* RunActionOnNPC(const FGameplayTag NPCTag, const UNPCActionDataAsset* ActionAsset);
 
 	// As RunActionOnNPC, resolving the tag from the actor's UNPCSystemComponent.
-	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions", meta = (DeterminesOutputType = "ActionClass"))
-	UNPCAction* RunActionOnActor(AActor* NPC, TSubclassOf<UNPCAction> ActionClass);
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions")
+	UNPCAction* RunActionOnActor(AActor* NPC, const UNPCActionDataAsset* ActionAsset);
+
+	// Soft-reference variants: load the asset on demand, so a quest, dialog or level Blueprint
+	// can name an action without pulling it — and everything it references — into memory up front.
+	// The load is synchronous; call these off the critical path if the asset is heavy.
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions")
+	UNPCAction* RunSoftActionOnNPC(const FGameplayTag NPCTag, TSoftObjectPtr<UNPCActionDataAsset> ActionAsset);
+
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions")
+	UNPCAction* RunSoftActionOnActor(AActor* NPC, TSoftObjectPtr<UNPCActionDataAsset> ActionAsset);
 
 	// Aborts the running action and discards everything queued behind it for this NPC.
 	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem|Actions")
