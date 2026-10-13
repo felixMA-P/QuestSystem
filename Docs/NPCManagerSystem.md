@@ -2,7 +2,7 @@
 
 Tag-keyed registry for NPCs. Single runtime module: `NPCManagerSystem`.
 
-The subsystem auto-populates at world initialization by scanning all actors for `UNPCSystemComponent`. Manual registration is also available.
+NPCs register themselves through `UNPCSystemComponent` and unregister when they leave play. Manual registration is also available.
 
 ---
 
@@ -16,7 +16,24 @@ Add to any Actor to make it register with `UNpcManagerSubsystem`.
 |---|---|---|---|
 | `Tag` | `FGameplayTag` | NPC System | Unique key used to look up this NPC in the subsystem |
 
-The component also caches an `FNPCInfoRow` (private), populated by the subsystem during registration. Read it via `GetNPCData()`.
+| Function | Description |
+|---|---|
+| `SetTag(NewTag)` | Re-registers the owner under a new tag. Actions queued under the old tag are cancelled |
+| `GetNPCData()` | `BlueprintPure`. The NPC Info row matching `Tag`, or an empty row if the table has none |
+
+The component registers its owner on `BeginPlay` and unregisters it on `EndPlay`, so destroyed and streamed-out NPCs never linger in the registry and their queued actions are cancelled.
+
+---
+
+## Settings
+
+**Project Settings → Plugins → NPC Manager System** (`UNPCManagerSettings`, saved to the project's `DefaultGame.ini`).
+
+| Property | Type | Description |
+|---|---|---|
+| `NPCDataTable` | `TSoftObjectPtr<UDataTable>` | Table of `FNPCInfoRow` to read display data from. Defaults to the example table shipped with the plugin, `/NPCManagerSystem/NPCManagerSystem/Data/DT_NPCInfo`. Leave empty if NPCs need no display data |
+
+Point this at your own table rather than editing the plugin's copy, which a plugin update would overwrite. Whichever table is set is added to the cook automatically, so it does not need to be referenced by anything. A table whose row structure is not `NPCInfoRow` is ignored with an error.
 
 ---
 
@@ -50,20 +67,20 @@ UNpcManagerSubsystem* NM = UFunctionHelpers::GetNpcManager(GetWorld());
 
 | Function | Category | Description |
 |---|---|---|
-| `AddNPC(Actor)` | NPCManagerSystem | Registers an actor using the `FGameplayTag` from its `UNPCSystemComponent`, and pushes the matching DataTable row into that component |
-| `RemoveNPC(NameTag)` | NPCManagerSystem | Removes the NPC registered under the given tag |
-| `GetNPC(NameTag)` | NPCManagerSystem | Returns the actor registered under the given tag, or null |
-| `MoveNPC(NameTag, Location)` | NPCManagerSystem | Teleports the registered NPC to the given world location |
+| `AddNPC(Actor)` | NPCManagerSystem | Registers an actor using the `FGameplayTag` from its `UNPCSystemComponent`, and pushes the matching DataTable row into that component. Re-adding the same actor does nothing; a tag already held by another live actor is refused with an error |
+| `RemoveNPC(NameTag)` | NPCManagerSystem | Removes the NPC registered under the given tag and cancels its actions |
+| `RemoveNPCActor(Actor)` | NPCManagerSystem | Removes this actor, whatever tag it is registered under, and cancels its actions |
+| `GetNPC(NameTag)` | NPCManagerSystem | Returns the actor registered under the given tag, or null (also null for an actor being destroyed) |
+| `MoveNPC(NameTag, Location)` | NPCManagerSystem | Teleports the registered NPC to the given world location; logs and does nothing if the tag is unknown |
 | `GetNPCInfo(Tag, OutInfo)` | NPCManagerSystem | Looks up the `FNPCInfoRow` whose `Tag` matches; returns false if not found |
 
 #### Auto-Registration
 
-`Initialize` binds two world delegates:
+- `OnActorsInitialized` → `InitNpcList` registers every actor placed in the level that has a `UNPCSystemComponent`. This runs before any `BeginPlay`, so placed NPCs can be looked up from the very start.
+- `UNPCSystemComponent::BeginPlay` registers actors spawned later, and picks up tags set in a construction script or before `FinishSpawning`.
+- `UNPCSystemComponent::EndPlay` unregisters the actor (destroy, level streaming, world teardown).
 
-- `OnActorsInitialized` → `InitNpcList`, which scans every actor in the world and passes each to `AddNPC` (non-NPC actors are filtered out by the missing component).
-- `AddOnActorSpawnedHandler` → `RegisterNPC`, so actors spawned after world init register automatically.
-
-Actors without a valid `Tag` are skipped, and logged as an error in editor builds.
+Actors without a valid `Tag` are skipped and logged as an error. Each tag maps to exactly one actor.
 
 ---
 
@@ -188,7 +205,7 @@ UFunctionHelpers::GetNpcManager(World)  →  UNpcManagerSubsystem*
 
 1. Add `UNPCSystemComponent` to the actor.
 2. Set the component's `Tag` property to a unique `FGameplayTag`.
-3. Add a row to the NPC DataTable with the same `Tag` if the NPC needs display data.
+3. If the NPC needs display data, add a row with the same `Tag` to the table set in **Project Settings → Plugins → NPC Manager System**.
 
 Registration is automatic whether the actor is placed in the level or spawned at runtime. To register explicitly:
 

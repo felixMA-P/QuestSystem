@@ -1,3 +1,4 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
 
 #pragma once
 
@@ -5,11 +6,10 @@
 #include "GameplayTagContainer.h"
 #include "NPCInfoRow.h"
 #include "Engine/DataTable.h"
+#include "Engine/World.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "Templates/SubclassOf.h"
 #include "NpcManagerSubsystem.generated.h"
 
-class ANPC;
 class UNPCAction;
 class UNPCActionDataAsset;
 
@@ -27,9 +27,13 @@ struct FNPCActionQueue
 };
 
 /**
- * 
- * This system have the count of the Main Characters of the game and the secondary Characters
- * 
+ *
+ * Registry of the world's NPCs, keyed by the gameplay tag on their UNPCSystemComponent,
+ * plus a FIFO action queue per NPC.
+ *
+ * NPCs register themselves: at world initialization, and from their component's BeginPlay,
+ * and unregister from its EndPlay. Each tag maps to exactly one actor.
+ *
  * Felix Martin Arroyo
  */
 UCLASS(Blueprintable, BlueprintType)
@@ -39,11 +43,19 @@ class NPCMANAGERSYSTEM_API UNpcManagerSubsystem : public UWorldSubsystem
 
 public:
 
+	// Registers the actor under its UNPCSystemComponent's tag. Does nothing if it is already
+	// registered; refused, with an error, if another live actor already holds that tag.
 	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	void AddNPC(AActor* NPC);
 
+	// Unregisters whatever is registered under this tag and cancels its actions.
 	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	void RemoveNPC(const FGameplayTag NameTag);
+
+	// Unregisters this actor, if it is registered, and cancels its actions. Unlike RemoveNPC
+	// this never touches another actor that has since taken the same tag.
+	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
+	void RemoveNPCActor(AActor* NPC);
 
 	UFUNCTION(BlueprintCallable, Category = "NPCManagerSystem")
 	AActor* GetNPC(const FGameplayTag NameTag);
@@ -95,12 +107,12 @@ public:
 
 private:
 
-	// DataTable of FNPCInfoRow, loaded in Initialize. Rows are matched on their Tag field.
+	// DataTable of FNPCInfoRow, loaded in Initialize from UNPCManagerSettings. Rows are matched on their Tag field.
 	UPROPERTY()
 	TObjectPtr<UDataTable> NPCDataTable;
 
 	UPROPERTY()
-	TMap<FGameplayTag, AActor*> TagNPCsMap;
+	TMap<FGameplayTag, TObjectPtr<AActor>> TagNPCsMap;
 
 	// Holds action instances alive while queued or running.
 	UPROPERTY()
@@ -112,6 +124,9 @@ private:
 
 	FDelegateHandle OnActorsInitializedDelegate;
 
+	// Silent lookup, for registration where a missing row is normal.
+	const FNPCInfoRow* FindNPCInfoRow(const FGameplayTag& Tag) const;
+
 protected:
 
 	void InitNpcList(const FActorsInitializedParams& ActorsInitializedParams);
@@ -121,9 +136,9 @@ protected:
 
 	// Bound to each action's internal completion hook.
 	void HandleActionCompleted(UNPCAction* Action);
-	
+
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
-	
+
 };

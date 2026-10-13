@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #include "NPCActionDataAsset.h"
 
 #include "NPCAction.h"

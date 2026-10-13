@@ -1,24 +1,26 @@
-﻿{
+{
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "NPC Manager System",
-	"Description": "A system that manages the NPCs, that let you store and look up NPC actors by a gameplay tag",
+	"Description": "Register NPCs by gameplay tag, look them up from anywhere, and drive them with queued, data-asset-configured actions.",
 	"Category": "NPC",
 	"CreatedBy": "Felix Martin Arroyo",
-	"CreatedByURL": "https://www.linkedin.com/in/felix-martín-arroyo-5a1755200/",
+	"CreatedByURL": "https://felixmartinarroyo.com",
 	"DocsURL": "",
 	"MarketplaceURL": "",
+	"SupportURL": "https://felixmartinarroyo.com",
+	"EngineVersion": "5.5.0",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
-	"IsExperimentalVersion": true,
+	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
 			"Name": "NPCManagerSystem",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"PlatformAllowList": "Win64"
+			"PlatformAllowList": [ "Win64", "Mac", "Linux" ]
 		}
 	]
 }

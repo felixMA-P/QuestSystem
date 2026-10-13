@@ -1,3 +1,5 @@
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -13,7 +15,7 @@ struct NPCMANAGERSYSTEM_API FNPCInfoRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	// Identifying tag for this NPC; should match the row name used to look it up.
+	// Identifying tag for this NPC. Rows are matched on this field, not on the row name.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "NPC Info")
 	FGameplayTag Tag;
 

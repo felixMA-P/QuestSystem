@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
 
 #pragma once
 
@@ -12,15 +12,11 @@ UCLASS()
 class NPCMANAGERSYSTEM_API UFunctionHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
-public:
-	
-	UFunctionHelpers(){}
 
+public:
+
+	// Null if WorldContext is null.
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="CustomSubsystemsAccess")
-	static UNpcManagerSubsystem* GetNpcManager(UWorld* WorldContext)
-	{
-		return WorldContext->GetSubsystem<UNpcManagerSubsystem>();
-	}
-	
+	static UNpcManagerSubsystem* GetNpcManager(UWorld* WorldContext);
+
 };

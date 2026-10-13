@@ -1,42 +1,66 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2026 Felix Martin Arroyo. All Rights Reserved.
 
 
 #include "NpcManagerSubsystem.h"
-#include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
 #include "NPCAction.h"
 #include "NPCActionDataAsset.h"
 #include "NPCInfoRow.h"
 #include "NPCManagerLog.h"
+#include "NPCManagerSettings.h"
 #include "NPCSystemComponent.h"
-
-// Designer-populated DataTable shipped in the plugin's Content folder.
-static const TCHAR* NPCDataTablePath = TEXT("/NPCManagerSystem/DT_NPCInfo.DT_NPCInfo");
 
 void UNpcManagerSubsystem::AddNPC(AActor* NPC)
 {
-	check(NPC);
-
-	UNPCSystemComponent* Comp = NPC->GetComponentByClass<UNPCSystemComponent>();
-	
-	if(Comp)
+	if (!NPC)
 	{
-		if (Comp->Tag.IsValid())
-		{
-			FNPCInfoRow FoundRow;
-			if (GetNPCInfo(Comp->Tag, FoundRow))
-			{
-				Comp->SetNPCData(FoundRow);
-			}
-
-			TagNPCsMap.Add(Comp->Tag ,NPC);
-		}
-#if WITH_EDITOR
-		else
-		{
-			UE_LOG(LogNPCManager, Error, TEXT("The NPC: %s Doesn't have a tag set up"), *NPC->GetActorLabel());
-		}
-#endif
+		UE_LOG(LogNPCManager, Warning, TEXT("AddNPC: null actor"));
+		return;
 	}
+
+	UNPCSystemComponent* Comp = NPC->FindComponentByClass<UNPCSystemComponent>();
+
+	if (!Comp)
+	{
+		UE_LOG(LogNPCManager, Warning, TEXT("AddNPC: '%s' has no NPC System Component, so it has no tag to register under"),
+			*NPC->GetActorNameOrLabel());
+		return;
+	}
+
+	if (!Comp->Tag.IsValid())
+	{
+		UE_LOG(LogNPCManager, Error, TEXT("AddNPC: '%s' has no tag set on its NPC System Component"),
+			*NPC->GetActorNameOrLabel());
+		return;
+	}
+
+	// Registration runs from several places (world init, BeginPlay, manual calls), so
+	// re-adding the same actor is expected and harmless.
+	if (const TObjectPtr<AActor>* Existing = TagNPCsMap.Find(Comp->Tag))
+	{
+		if (*Existing == NPC)
+		{
+			return;
+		}
+
+		// A destroyed holder is just a stale entry; anything live means two NPCs share a tag,
+		// and silently replacing it would leave GetNPC answering for whichever registered last.
+		if (IsValid(*Existing))
+		{
+			UE_LOG(LogNPCManager, Error, TEXT("AddNPC: tag '%s' is already used by '%s'; '%s' was not registered. NPC tags must be unique."),
+				*Comp->Tag.GetTagName().ToString(), *(*Existing)->GetActorNameOrLabel(), *NPC->GetActorNameOrLabel());
+			return;
+		}
+	}
+
+	// Rows are optional, so a missing one is not worth a warning here.
+	const FNPCInfoRow* Row = FindNPCInfoRow(Comp->Tag);
+	Comp->SetNPCData(Row ? *Row : FNPCInfoRow());
+
+	TagNPCsMap.Add(Comp->Tag, NPC);
+
+	UE_LOG(LogNPCManager, Verbose, TEXT("Registered '%s' as '%s'"),
+		*NPC->GetActorNameOrLabel(), *Comp->Tag.GetTagName().ToString());
 }
 
 void UNpcManagerSubsystem::RemoveNPC(const FGameplayTag NameTag)
@@ -47,35 +71,63 @@ void UNpcManagerSubsystem::RemoveNPC(const FGameplayTag NameTag)
 	TagNPCsMap.Remove(NameTag);
 }
 
+void UNpcManagerSubsystem::RemoveNPCActor(AActor* NPC)
+{
+	if (!NPC)
+	{
+		return;
+	}
+
+	// Looked up by actor, not by its component's current tag: the tag may have changed
+	// since registration, or the actor may never have won it.
+	if (const FGameplayTag* Tag = TagNPCsMap.FindKey(NPC))
+	{
+		RemoveNPC(*Tag);
+	}
+}
+
 AActor* UNpcManagerSubsystem::GetNPC(const FGameplayTag NameTag)
 {
-	AActor** NpcPtr = TagNPCsMap.Find(NameTag);
+	const TObjectPtr<AActor>* NpcPtr = TagNPCsMap.Find(NameTag);
 
-	if (!NpcPtr || !*NpcPtr)
+	// IsValid also rejects an actor that is mid-destruction but not yet collected.
+	if (!NpcPtr || !IsValid(*NpcPtr))
 	{
-		UE_LOG(LogNPCManager, Error, TEXT("No NPC found for tag: %s"), *NameTag.GetTagName().ToString());
+		UE_LOG(LogNPCManager, Warning, TEXT("No NPC found for tag: %s"), *NameTag.GetTagName().ToString());
 		return nullptr;
 	}
-	
+
 	return *NpcPtr;
 }
 
-bool UNpcManagerSubsystem::GetNPCInfo(const FGameplayTag& Tag, FNPCInfoRow& OutInfo)
+const FNPCInfoRow* UNpcManagerSubsystem::FindNPCInfoRow(const FGameplayTag& Tag) const
 {
 	if (!NPCDataTable)
 	{
-		UE_LOG(LogNPCManager, Warning, TEXT("GetNPCInfo: NPCDataTable is not set on the NPC Manager Subsystem"));
-		return false;
+		return nullptr;
 	}
 
 	const FNPCInfoRow* FoundRow = nullptr;
-	NPCDataTable->ForeachRow<FNPCInfoRow>(TEXT("GetNPCInfo"), [&Tag, &FoundRow](const FName& RowName, const FNPCInfoRow& Row)
+	NPCDataTable->ForeachRow<FNPCInfoRow>(TEXT("FindNPCInfoRow"), [&Tag, &FoundRow](const FName& RowName, const FNPCInfoRow& Row)
 	{
 		if (!FoundRow && Row.Tag == Tag)
 		{
 			FoundRow = &Row;
 		}
 	});
+
+	return FoundRow;
+}
+
+bool UNpcManagerSubsystem::GetNPCInfo(const FGameplayTag& Tag, FNPCInfoRow& OutInfo)
+{
+	if (!NPCDataTable)
+	{
+		UE_LOG(LogNPCManager, Warning, TEXT("GetNPCInfo: no NPC DataTable is loaded (Project Settings > Plugins > NPC Manager System)"));
+		return false;
+	}
+
+	const FNPCInfoRow* FoundRow = FindNPCInfoRow(Tag);
 
 	if (!FoundRow)
 	{
@@ -90,11 +142,11 @@ bool UNpcManagerSubsystem::GetNPCInfo(const FGameplayTag& Tag, FNPCInfoRow& OutI
 
 void UNpcManagerSubsystem::MoveNPC(const FGameplayTag NameTag, const FVector& Location)
 {
-	AActor* NpcPtr = GetNPC(NameTag);
-
-	check(NpcPtr);
-	
-	NpcPtr->SetActorLocation(Location);
+	// GetNPC logs when the tag is unknown.
+	if (AActor* Npc = GetNPC(NameTag))
+	{
+		Npc->SetActorLocation(Location);
+	}
 }
 
 
@@ -352,13 +404,14 @@ int32 UNpcManagerSubsystem::GetQueuedActionCount(const FGameplayTag NPCTag) cons
 
 void UNpcManagerSubsystem::InitNpcList(const FActorsInitializedParams& ActorsInitializedParams)
 {
-	TArray<AActor*> OutNpcs;
-	
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutNpcs);
-
-	for (AActor* Npc : OutNpcs)
+	// Runs before any BeginPlay, so NPCs placed in the level can be looked up from the start.
+	// Actors spawned later register themselves from UNPCSystemComponent::BeginPlay.
+	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
-		AddNPC(Npc);
+		if (It->FindComponentByClass<UNPCSystemComponent>())
+		{
+			AddNPC(*It);
+		}
 	}
 }
 
@@ -368,19 +421,30 @@ void UNpcManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	// Loaded here rather than in the constructor: the CDO is created at module load, which can
 	// precede the plugin's content mount, in which case the asset would not be found.
-	NPCDataTable = LoadObject<UDataTable>(nullptr, NPCDataTablePath);
+	const TSoftObjectPtr<UDataTable>& TablePath = GetDefault<UNPCManagerSettings>()->NPCDataTable;
 
-	if (!NPCDataTable)
+	if (!TablePath.IsNull())
 	{
-		UE_LOG(LogNPCManager, Warning, TEXT("NPC Manager: failed to load the NPC DataTable at '%s'"), NPCDataTablePath);
+		NPCDataTable = TablePath.LoadSynchronous();
+
+		if (!NPCDataTable)
+		{
+			UE_LOG(LogNPCManager, Warning, TEXT("NPC Manager: failed to load the NPC DataTable at '%s'"), *TablePath.ToString());
+		}
+		else if (!NPCDataTable->GetRowStruct() || !NPCDataTable->GetRowStruct()->IsChildOf(FNPCInfoRow::StaticStruct()))
+		{
+			UE_LOG(LogNPCManager, Error, TEXT("NPC Manager: DataTable '%s' does not use the NPCInfoRow row structure; ignoring it"), *TablePath.ToString());
+			NPCDataTable = nullptr;
+		}
 	}
 
-	GetWorld()->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::AddNPC));
 	OnActorsInitializedDelegate = GetWorld()->OnActorsInitialized.Add(UWorld::FOnWorldInitializedActors::FDelegate::CreateUObject(this, &UNpcManagerSubsystem::InitNpcList));
 }
 
 void UNpcManagerSubsystem::Deinitialize()
 {
+	GetWorld()->OnActorsInitialized.Remove(OnActorsInitializedDelegate);
+
 	// Abort anything still in flight; a pending Delay or timer must not fire into a dead world.
 	TArray<FGameplayTag> QueuedTags;
 	ActionQueues.GetKeys(QueuedTags);
